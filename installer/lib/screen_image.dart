@@ -25,8 +25,8 @@ class _ImageScreenState extends State<ImageScreen> {
 
     downloadTask.future.then((snapshot) {
       setState(() {
-        _imageLoaded = true;
         _remoteImage = file;
+        _imageLoaded = true;
       });
     });
 
@@ -41,11 +41,10 @@ class _ImageScreenState extends State<ImageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: null,
-      body: Center(
-        child: !_imageLoaded
-            ? Center(
+    return !_imageLoaded
+            ? Scaffold(
+        appBar: null,
+        body:  Center(
                 child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -60,12 +59,7 @@ class _ImageScreenState extends State<ImageScreen> {
                         Theme.of(context).primaryColor),
                   ),
                 ],
-              ))
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[Image.file(_remoteImage)],
-              ),
-      ),
-    );
+              )))
+            : Image.file(_remoteImage, fit: BoxFit.fitHeight);
   }
 }
