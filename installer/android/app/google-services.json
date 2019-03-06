@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "404116931877",
+    "firebase_url": "https://studynow-f5337.firebaseio.com",
+    "project_id": "studynow-f5337",
+    "storage_bucket": "studynow-f5337.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404116931877:android:882abe61e51335da",
+        "android_client_info": {
+          "package_name": "github.caelana.installer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "404116931877-3ge0mar91fa62vvmlepbng9bf69m8kaf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdhVvU09pA9oQcM69G9awrnRWZrOhvrZY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
