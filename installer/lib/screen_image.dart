@@ -12,8 +12,12 @@ const Offset TOUCH_SCREEN_OFFSET = Offset(-20, -100.0);
 class ImageScreen extends StatefulWidget {
   String imageFileName;
   String cameraDocumentPath;
+  String cameraName;
 
-  ImageScreen(this.imageFileName, this.cameraDocumentPath);
+  final GlobalKey<ScaffoldState> prevScaffoldKey; 
+
+  ImageScreen(
+      {this.imageFileName, this.cameraDocumentPath, this.prevScaffoldKey, this.cameraName});
 
   @override
   _ImageScreenState createState() => _ImageScreenState();
@@ -112,39 +116,47 @@ class _ImageScreenState extends State<ImageScreen> {
     );
   }
 
-  void showFinishDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
-          titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
-          title: Text(
-            "Calibration Complete!",
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            "The camera has received information and is now calibrated",
-            textAlign: TextAlign.center,
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: new Text("Finish"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void showFinishDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       // return object of type Dialog
+  //       return AlertDialog(
+  //         contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
+  //         titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+  //         title: Text(
+  //           "Calibration Complete!",
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         content: Text(
+  //           "The camera has received information and is now calibrated",
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         actions: <Widget>[
+  //           FlatButton(
+  //             child: new Text("Finish"),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void submitInfo(BuildContext context) {
     // showFinishDialog();
-    Database.setCameraZoneInformation(widget.cameraDocumentPath, _chairMarkers.length);
-    print("Done");
+    Navigator.pop(context);
+    Database.setCameraZoneInformation(
+            widget.cameraDocumentPath, _chairMarkers.length)
+        .then((onValue) {
+      widget.prevScaffoldKey.currentState.showSnackBar(SnackBar(
+        backgroundColor: Theme.of(context).accentColor,
+        content: Text('${widget.cameraName} successfully calibrated'),
+        duration: Duration(seconds: 5),
+      ));
+    });
   }
 
   @override

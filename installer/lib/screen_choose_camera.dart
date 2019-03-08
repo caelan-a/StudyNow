@@ -13,6 +13,9 @@ class ChooseCameraScreen extends StatefulWidget {
 }
 
 class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<
+      ScaffoldState>(); //  Passed to next screen to display snackbar upon return
+
   String _collectionToDisplay; // CollectionID for firebase list retrieval
   String _loadingString;
 
@@ -52,6 +55,7 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           title: const Text('Choose Camera'),
           centerTitle: true,
@@ -72,7 +76,7 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
               }
             },
             child:
-                FirebaseList(_collectionToDisplay, _loadingString, getList)));
+                FirebaseList(_collectionToDisplay, _loadingString, getList, _scaffoldKey)));
   }
 }
 
@@ -80,9 +84,13 @@ class FirebaseList extends StatelessWidget {
   final String collectionTitle;
   final String loadingText;
 
+  final GlobalKey<ScaffoldState>
+      scaffoldKey; //  Passed to next screen to display snackbar upon return
+
   Function(String, String) getList;
 
-  FirebaseList(this.collectionTitle, this.loadingText, this.getList);
+  FirebaseList(
+      this.collectionTitle, this.loadingText, this.getList, this.scaffoldKey);
 
   @override
   Widget build(BuildContext context) {
@@ -135,14 +143,21 @@ class FirebaseList extends StatelessWidget {
                               document.documentID +
                               "/" +
                               document['nextCollection'];
-                              print(nextCollectionPath);
+                          print(nextCollectionPath);
                           getList(nextCollectionPath, "");
                         } else {
                           //  Reached end of tree. Get camera image file name
-                          String cameraDocumentPath = collectionTitle + "/" + "1";
+                          String cameraDocumentPath =
+                              collectionTitle + "/" + "1";
                           String imageFileName = document["image_file_name"];
                           print("Image File Name: $imageFileName");
-                          Main.toScreen(context, ImageScreen(imageFileName, cameraDocumentPath));
+                          Main.toScreen(
+                              context,
+                              ImageScreen(
+                                  imageFileName: imageFileName,
+                                  cameraDocumentPath: cameraDocumentPath,
+                                  prevScaffoldKey: scaffoldKey,
+                                  cameraName: document['title'],));
                         }
                       },
                     ),
