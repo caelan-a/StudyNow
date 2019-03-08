@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'main.dart';
+import 'database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
@@ -10,8 +11,9 @@ const Offset TOUCH_SCREEN_OFFSET = Offset(-20, -100.0);
 
 class ImageScreen extends StatefulWidget {
   String imageFileName;
+  String cameraDocumentPath;
 
-  ImageScreen(this.imageFileName);
+  ImageScreen(this.imageFileName, this.cameraDocumentPath);
 
   @override
   _ImageScreenState createState() => _ImageScreenState();
@@ -44,35 +46,6 @@ class _ImageScreenState extends State<ImageScreen> {
     });
 
     return file;
-  }
-
-  void showInstructionDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
-          titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
-          title: Text(
-            "Calibrate",
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            "Mark all chairs with a tap and then press done",
-            textAlign: TextAlign.center,
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: new Text("Ok"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void refreshImage() {
@@ -110,6 +83,70 @@ class _ImageScreenState extends State<ImageScreen> {
     return false;
   }
 
+  void showInstructionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
+          titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+          title: Text(
+            "Calibrate",
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            "Mark all chairs with a tap and then press done",
+            textAlign: TextAlign.center,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: new Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showFinishDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
+          titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+          title: Text(
+            "Calibration Complete!",
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            "The camera has received information and is now calibrated",
+            textAlign: TextAlign.center,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: new Text("Finish"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void submitInfo(BuildContext context) {
+    // showFinishDialog();
+    Database.setCameraZoneInformation(widget.cameraDocumentPath, _chairMarkers.length);
+    print("Done");
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> stackChildren = [];
@@ -131,9 +168,10 @@ class _ImageScreenState extends State<ImageScreen> {
           )
           .toList());
     }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calibrate'),
+        title: const Text('Count All Chairs'),
         centerTitle: true,
         actions: <Widget>[
           // action button
@@ -149,7 +187,9 @@ class _ImageScreenState extends State<ImageScreen> {
         elevation: 10.0,
         icon: const Icon(Icons.check),
         label: const Text('Done'),
-        onPressed: () {},
+        onPressed: () {
+          submitInfo(context);
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(

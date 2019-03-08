@@ -139,9 +139,10 @@ class FirebaseList extends StatelessWidget {
                           getList(nextCollectionPath, "");
                         } else {
                           //  Reached end of tree. Get camera image file name
+                          String cameraDocumentPath = collectionTitle + "/" + "1";
                           String imageFileName = document["image_file_name"];
                           print("Image File Name: $imageFileName");
-                          Main.toScreen(context, ImageScreen(imageFileName));
+                          Main.toScreen(context, ImageScreen(imageFileName, cameraDocumentPath));
                         }
                       },
                     ),
