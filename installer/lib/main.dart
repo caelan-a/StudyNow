@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'screen_home.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(Main());
 
-class MyApp extends StatelessWidget {
+class Main extends StatelessWidget {
+  static void toScreen(BuildContext context, Widget screen) {
+    Navigator.push(context, CupertinoPageRoute(builder: (context) => screen));
+  }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -17,6 +22,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'main.dart';
 import 'package:installer/screen_image.dart';
+import 'package:installer/screen_choose_camera.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
@@ -18,10 +19,12 @@ class _HomePageState extends State<HomePage> {
       appBar: null,
       body: Center(
         child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Container(padding: EdgeInsets.all(40.0),),
+            Container(
+              padding: EdgeInsets.all(40.0),
+            ),
             Text(
               "StudyNow",
               textAlign: TextAlign.center,
@@ -39,8 +42,7 @@ class _HomePageState extends State<HomePage> {
                   fontWeight: FontWeight.normal),
             ),
             Container(
-              padding: EdgeInsets.fromLTRB(40.0,40.0,40.0,0.0),
-
+                padding: EdgeInsets.fromLTRB(40.0, 40.0, 40.0, 0.0),
                 child: Image.asset('assets/calibrate.png',
                     scale: 2.0, color: Theme.of(context).primaryColor)),
             Container(
@@ -51,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                 color: Theme.of(context).primaryColor,
                 onPressed: () {
                   print("go");
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ImageScreen()));
+                  Main.toScreen(context, ChooseCameraScreen());
                 },
               ),
             ),

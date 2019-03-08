@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
+import 'main.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
 class ImageScreen extends StatefulWidget {
-  ImageScreen({Key key}) : super(key: key);
+  String imageFileName;
+
+  ImageScreen(this.imageFileName);
 
   @override
   _ImageScreenState createState() => _ImageScreenState();
@@ -35,31 +37,31 @@ class _ImageScreenState extends State<ImageScreen> {
 
   @override
   void initState() {
-    downloadFile("remote_image.jpg");
+    downloadFile(widget.imageFileName);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return !_imageLoaded
-            ? Scaffold(
-        appBar: null,
-        body:  Center(
+        ? Scaffold(
+            appBar: null,
+            body: Center(
                 child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Fetching image from camera\n\n",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16.0),
-                  ),
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).primaryColor),
-                  ),
-                ],
-              )))
-            : Image.file(_remoteImage, fit: BoxFit.fitHeight);
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  "Fetching image from camera\n\n",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 16.0),
+                ),
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor),
+                ),
+              ],
+            )))
+        : Image.file(_remoteImage, fit: BoxFit.fitHeight);
   }
 }
