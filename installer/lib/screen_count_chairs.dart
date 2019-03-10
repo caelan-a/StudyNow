@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'main.dart';
 import 'database.dart';
+import 'package:installer/screen_choose_zone.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
@@ -9,38 +10,41 @@ const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
 const Offset TOUCH_SCREEN_OFFSET = Offset(-20, -100.0);
 
-class ImageScreen extends StatefulWidget {
-  String imageFileName;
-  String cameraDocumentPath;
-  String cameraName;
+class CountChairsScreen extends StatefulWidget {
+  String firebaseImagePath;
+  String firebaseFloorplanPath;
 
-  final GlobalKey<ScaffoldState> prevScaffoldKey; 
+  Function(int) onComplete;
 
-  ImageScreen(
-      {this.imageFileName, this.cameraDocumentPath, this.prevScaffoldKey, this.cameraName});
+  CountChairsScreen({this.firebaseImagePath, this.onComplete, this.firebaseFloorplanPath});
 
   @override
-  _ImageScreenState createState() => _ImageScreenState();
+  _CountChairsScreenState createState() => _CountChairsScreenState();
 }
 
-class _ImageScreenState extends State<ImageScreen> {
+class _CountChairsScreenState extends State<CountChairsScreen> {
   bool _imageLoaded = false;
   bool shouldShowDialog = true;
-  File _remoteImage;
+  File _imageFile;
 
   List<Offset> _chairMarkers;
 
-  Future<File> downloadFile(String fileName) async {
+  Future<File> downloadFile(String firebasePath) async {
+    String fileName = firebasePath.split('/').last;
+
     print("Downloading image: $fileName from FirebaseStorage..");
     Directory tempDir = Directory.systemTemp;
     final File file = File('${tempDir.path}/$fileName');
 
-    final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
+    print(fileName);
+
+    final StorageReference ref =
+        FirebaseStorage.instance.ref().child(firebasePath);
     final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
 
     downloadTask.future.then((snapshot) {
       setState(() {
-        _remoteImage = file;
+        _imageFile = file;
         _imageLoaded = true;
         if (shouldShowDialog) {
           showInstructionDialog();
@@ -57,13 +61,13 @@ class _ImageScreenState extends State<ImageScreen> {
       _chairMarkers = [];
       _imageLoaded = false;
     });
-    downloadFile(widget.imageFileName);
+    downloadFile(widget.firebaseImagePath);
   }
 
   @override
   void initState() {
     _chairMarkers = [];
-    downloadFile(widget.imageFileName);
+    downloadFile(widget.firebaseImagePath);
     super.initState();
   }
 
@@ -96,7 +100,7 @@ class _ImageScreenState extends State<ImageScreen> {
           contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
           titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
           title: Text(
-            "Calibrate",
+            "Chairs Present",
             textAlign: TextAlign.center,
           ),
           content: Text(
@@ -116,55 +120,12 @@ class _ImageScreenState extends State<ImageScreen> {
     );
   }
 
-  // void showFinishDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       // return object of type Dialog
-  //       return AlertDialog(
-  //         contentPadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 00.0),
-  //         titlePadding: EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
-  //         title: Text(
-  //           "Calibration Complete!",
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         content: Text(
-  //           "The camera has received information and is now calibrated",
-  //           textAlign: TextAlign.center,
-  //         ),
-  //         actions: <Widget>[
-  //           FlatButton(
-  //             child: new Text("Finish"),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  void submitInfo(BuildContext context) {
-    // showFinishDialog();
-    Navigator.pop(context);
-    Database.setCameraZoneInformation(
-            widget.cameraDocumentPath, _chairMarkers.length)
-        .then((onValue) {
-      widget.prevScaffoldKey.currentState.showSnackBar(SnackBar(
-        backgroundColor: Theme.of(context).accentColor,
-        content: Text('${widget.cameraName} successfully calibrated'),
-        duration: Duration(seconds: 5),
-      ));
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     List<Widget> stackChildren = [];
 
     if (_imageLoaded) {
-      stackChildren.add(Image.file(_remoteImage, fit: BoxFit.fitWidth));
+      stackChildren.add(Image.file(_imageFile, fit: BoxFit.fitWidth));
 
       stackChildren.addAll(_chairMarkers
           .map(
@@ -182,25 +143,17 @@ class _ImageScreenState extends State<ImageScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Count All Chairs'),
-        centerTitle: true,
-        actions: <Widget>[
-          // action button
-          // IconButton(
-          //   icon: Icon(Icons.refresh),
-          //   onPressed: () {
-          //     //
-          //   },
-          // ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         elevation: 10.0,
-        icon: const Icon(Icons.check),
-        label: const Text('Done'),
+        icon: const Icon(Icons.arrow_forward),
+        label: const Text(
+          'Next',
+          style: TextStyle(fontSize: 16.0),
+        ),
         onPressed: () {
-          submitInfo(context);
+          widget.onComplete(_chairMarkers.length);
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => ChooseZoneScreen(firebaseImagePath: widget.firebaseFloorplanPath,)));
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

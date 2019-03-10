@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'main.dart';
-import 'package:installer/screen_image.dart';
+import 'package:installer/screen_count_chairs.dart';
 import 'package:installer/screen_choose_camera.dart';
 
 class HomePage extends StatefulWidget {

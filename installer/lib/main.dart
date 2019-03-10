@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-
-import 'package:installer/screen_image.dart';
 import 'screen_home.dart';
 
 void main() => runApp(Main());
 
 class Main extends StatelessWidget {
-  static final GlobalKey<NavigatorState> _rootNavKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> _rootNavKey =
+      GlobalKey<NavigatorState>();
 
   static GlobalKey<NavigatorState> getRootNavKey() {
     return _rootNavKey;
@@ -25,8 +24,9 @@ class Main extends StatelessWidget {
       navigatorKey: _rootNavKey,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-      
-        pageTransitionsTheme: PageTransitionsTheme(builders: {TargetPlatform.android: CupertinoPageTransitionsBuilder(),}),
+        pageTransitionsTheme: PageTransitionsTheme(builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        }),
       ),
       home: HomePage(title: 'StudyNow Installer'),
     );

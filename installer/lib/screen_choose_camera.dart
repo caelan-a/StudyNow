@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:installer/screen_image.dart';
+import 'package:installer/screen_initialise_camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'main.dart';
 
@@ -16,7 +16,16 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<
       ScaffoldState>(); //  Passed to next screen to display snackbar upon return
 
-  String _collectionToDisplayPath = "/libraries";
+  //  lowercase name of the firebase collection currently being viewed
+  String _currentCollectionName = "";
+
+  //  Filled upon user selections
+  String _chosenLibrary = "";
+  String _chosenFloor = "";
+  String _chosenCameraZone = "";
+
+  //  path Firebase collection to display in list
+  String _collectionToDisplayPath;
 
   //  Get path to previous collection in Firebase based on current collection path
   String getPreviousCollection(String currentCollection) {
@@ -39,6 +48,9 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
 
   @override
   void initState() {
+    _currentCollectionName = "libraries";
+    _collectionToDisplayPath = "/libraries";
+
     super.initState();
   }
 
@@ -61,7 +73,7 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
         ));
   }
 
-  Widget _buildFirebaseList(collectionTitle, scaffoldKey) {
+  Widget _buildFirebaseList(collectionPath, scaffoldKey) {
     return WillPopScope(
         onWillPop: () async {
           print("pop");
@@ -69,7 +81,7 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
         },
         child: Scaffold(
             body: StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection(collectionTitle).snapshots(),
+          stream: Firestore.instance.collection(collectionPath).snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
@@ -107,31 +119,40 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
                                 color: Colors.grey[600]),
                           ),
                           onTap: () {
-                            if (document['nextCollection'] != "none") {
-                              String nextCollectionPath = collectionTitle +
+                            //  Store selection info
+                            if (_currentCollectionName == "libraries") {
+                              _chosenLibrary = document.documentID;
+                            } else if (_currentCollectionName == "floors") {
+                              _chosenFloor = document.documentID;
+                            } else if (_currentCollectionName ==
+                                "camera_zones") {
+                              _chosenCameraZone = document.documentID;
+                            }
+
+                            //  Check if need to search more collections or all information is retreieved
+                            if (_currentCollectionName != "camera_zones") {
+                              String nextCollectionPath = collectionPath +
                                   "/" +
                                   document.documentID +
                                   "/" +
                                   document['nextCollection'];
-                              print(nextCollectionPath);
                               _collectionToDisplayPath = nextCollectionPath;
+
+                              //  Push a new collection
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => _buildFirebaseList(
                                       nextCollectionPath, _scaffoldKey)));
+                              _currentCollectionName =
+                                  document['nextCollection'];
                             } else {
-                              //  Reached end of tree. Get camera image file name
-                              String cameraDocumentPath =
-                                  collectionTitle + "/" + "1";
-                              String imageFileName =
-                                  document["image_file_name"];
-                              print("Image File Name: $imageFileName");
+                              //  No more collections to search
                               Navigator.of(context, rootNavigator: true).push(
                                 MaterialPageRoute(
-                                  builder: (context) => ImageScreen(
-                                        imageFileName: imageFileName,
-                                        cameraDocumentPath: cameraDocumentPath,
+                                  builder: (context) => InitialiseCameraScreen(
+                                        library: _chosenLibrary,
+                                        floor: _chosenFloor,
+                                        cameraZone: _chosenCameraZone,
                                         prevScaffoldKey: scaffoldKey,
-                                        cameraName: document['title'],
                                       ),
                                 ),
                               );
