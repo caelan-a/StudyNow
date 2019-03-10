@@ -5,6 +5,7 @@ import 'database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
+import 'package:image/image.dart' as imageutil;
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
@@ -20,15 +21,34 @@ class ChooseZoneScreen extends StatefulWidget {
 
 class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   File _imageFile;
+
+  //  Pixels
+  int imageWidth;
+  int imageHeight;
+
   bool _shouldShowDialog = true;
   bool _imageLoaded = false;
 
+  PhotoViewController _photoViewController;
+
+  List<Offset> zoneMarkers = [];
+
   @override
   void initState() {
+    _photoViewController = PhotoViewController();
+
+    //  Set state of this widget to update icons when user scales or translates image
+    _photoViewController.outputStateStream.listen((onData) {
+      setState(() {
+        print("Set state");
+      });
+    });
+
     downloadFile(widget.firebaseImagePath);
     super.initState();
   }
 
+  //  Download file from firebase and store locally
   Future<File> downloadFile(String firebasePath) async {
     String fileName = firebasePath.split('/').last;
 
@@ -42,7 +62,14 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
         FirebaseStorage.instance.ref().child(firebasePath);
     final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
 
-    downloadTask.future.then((snapshot) {
+    downloadTask.future.then((snapshot) async {
+      //  Get width and height data from image
+      List<int> imageBytes = await file.readAsBytes();
+      imageutil.Image image = imageutil.decodePng(imageBytes);
+      imageWidth = image.width;
+      imageHeight = image.height;
+      // print("w: $imageWidth, h: $imageHeight");
+
       setState(() {
         _imageFile = file;
         _imageLoaded = true;
@@ -85,18 +112,87 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     );
   }
 
+  //  Uses values from PhotoViewController to translate coordinates of screen touch to an offset in image space
+  //  This offset describes the percentage of the way from the center to the right side of the image in the x
+  //  and a percentage of the way from the center to the bottom side of the image in the y
+  Offset convertToImageCoords(Offset touchPoint, PhotoViewController controller,
+      int imageWidth, int imageHeight) {
+    Size screenSize =
+        MediaQuery.of(context).size; // pixel size of device screen
+    Offset imageOffsetFromCenter = controller.position; // Offset from center
+    double scale = controller.scale; // scale image has been dilated by
+
+    Offset screenCenterPoint =
+        Offset(screenSize.width / 2, screenSize.height / 2);
+
+    Offset touchOffsetFromCenter = touchPoint - screenCenterPoint;
+    Offset touchOffsetFromCenterOfImage =
+        touchOffsetFromCenter - imageOffsetFromCenter;
+
+    double xPercentageFromCenter =
+        touchOffsetFromCenterOfImage.dx / scale / (imageWidth / 2.0);
+    double yPercentageFromCenter =
+        touchOffsetFromCenterOfImage.dy / scale / (imageHeight / 2.0);
+
+    return Offset(xPercentageFromCenter, yPercentageFromCenter);
+  }
+
+  //  Uses values from PhotoViewController to translate coordinates of image space to screen coords
+  //  Inverse function of convertToImageCoords
+  Offset convertToScreenCoords(Offset centerOffset,
+      PhotoViewController controller, int imageWidth, int imageHeight) {
+    Size screenSize =
+        MediaQuery.of(context).size; // pixel size of device screen
+    Offset screenCenterPoint =
+        Offset(screenSize.width / 2, screenSize.height / 2);
+    Offset imageOffsetFromCenter = controller.position; // Offset from center
+
+    double x = ((centerOffset.dx * (imageWidth / controller.scale / 2.0)) -
+        imageOffsetFromCenter.dx*controller.scale);
+
+    Offset screenCoords = Offset(x, 300.0);
+    return screenCoords;
+  }
+
+  void onTouch(TapUpDetails details) async {
+    Offset touchPoint = details.globalPosition; // Offset from top right corner
+
+    // zoneMarkers = [];
+    // zoneMarkers.add(convertToImageCoords(
+    //     touchPoint, _photoViewController, imageWidth, imageHeight));
+    print(zoneMarkers[0].dx);
+    setState(() {});
+  }
+
+  //  centerOffset is percentage of the way to each end from center of image
+  Widget _buildMarker(Offset centerOffset) {
+    Offset screenCoords = convertToScreenCoords(
+        centerOffset, _photoViewController, imageWidth, imageHeight);
+
+    print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
+    return Positioned(
+      left: screenCoords.dx,
+      top: screenCoords.dy,
+      child: Icon(Icons.crop_square),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    //  Populate stack to allow overlaying of location icons
     List<Widget> stackChildren = [];
-
     if (_imageLoaded) {
       stackChildren.add(new Container(
           child: new PhotoView(
-            backgroundDecoration: BoxDecoration(color: Colors.white),
+        controller: _photoViewController,
+        backgroundDecoration: BoxDecoration(color: Colors.white),
         imageProvider: FileImage(_imageFile),
         minScale: PhotoViewComputedScale.contained * 0.8,
         maxScale: 4.0,
       )));
+
+      stackChildren
+          .addAll(zoneMarkers.map((Offset o) => _buildMarker(o)).toList());
     }
 
     return Scaffold(
@@ -152,7 +248,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
                 ],
               ))
             : GestureDetector(
-                onTapUp: (detail) {},
+                onTapUp: (detail) {
+                  onTouch(detail);
+                },
                 child: Stack(children: stackChildren),
               ));
   }
