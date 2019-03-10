@@ -9,7 +9,7 @@ import 'package:image/image.dart' as imageutil;
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
-const Offset TOUCH_SCREEN_OFFSET = Offset(-20, -100.0);
+const Offset TOUCH_SCREEN_OFFSET = Offset(20.0, 100.0);
 
 class ChooseZoneScreen extends StatefulWidget {
   final String firebaseImagePath;
@@ -32,8 +32,6 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   PhotoViewController _photoViewController;
 
   List<Offset> zoneMarkers = [];
-
-
 
   @override
   void initState() {
@@ -136,6 +134,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     double yPercentageFromCenter =
         touchOffsetFromCenterOfImage.dy / scale / (imageHeight / 2.0);
 
+    print("\nxPerc: $xPercentageFromCenter\nyPerc: $yPercentageFromCenter");
+
     return Offset(xPercentageFromCenter, yPercentageFromCenter);
   }
 
@@ -149,10 +149,15 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
         Offset(screenSize.width / 2, screenSize.height / 2);
     Offset imageOffsetFromCenter = controller.position; // Offset from center
 
-    double x = ((centerOffset.dx * (imageWidth / controller.scale / 2.0)) -
-        imageOffsetFromCenter.dx*controller.scale);
+    double x = screenCenterPoint.dx + centerOffset.dx * (controller.scale * imageWidth / 2.0);
+    x += (imageOffsetFromCenter.dx);
 
-    Offset screenCoords = Offset(x, 300.0);
+    double y = screenCenterPoint.dy + (controller.scale * (centerOffset.dy * (imageHeight/ 2.0)));
+    y += ( controller.scale*imageOffsetFromCenter.dy);
+
+    print("\nx: $x\ny: $y\nscale: ${controller.scale}");
+    print("imageOffset: $imageOffsetFromCenter");
+    Offset screenCoords = Offset(x, y);
     return screenCoords;
   }
 
@@ -160,9 +165,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     Offset touchPoint = details.globalPosition; // Offset from top right corner
 
     zoneMarkers = [];
-    zoneMarkers.add(convertToImageCoords(
-        touchPoint, _photoViewController, imageWidth, imageHeight));
-        print(zoneMarkers);
+    zoneMarkers.add(convertToImageCoords(touchPoint, _photoViewController, imageWidth, imageHeight));
     setState(() {});
   }
 
@@ -171,7 +174,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     Offset screenCoords = convertToScreenCoords(
         centerOffset, _photoViewController, imageWidth, imageHeight);
 
-    print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
+    // print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
     return Positioned(
       left: screenCoords.dx,
       top: screenCoords.dy,
