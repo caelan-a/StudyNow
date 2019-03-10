@@ -33,6 +33,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
 
   List<Offset> zoneMarkers = [];
 
+
+
   @override
   void initState() {
     _photoViewController = PhotoViewController();
@@ -157,10 +159,10 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   void onTouch(TapUpDetails details) async {
     Offset touchPoint = details.globalPosition; // Offset from top right corner
 
-    // zoneMarkers = [];
-    // zoneMarkers.add(convertToImageCoords(
-    //     touchPoint, _photoViewController, imageWidth, imageHeight));
-    print(zoneMarkers[0].dx);
+    zoneMarkers = [];
+    zoneMarkers.add(convertToImageCoords(
+        touchPoint, _photoViewController, imageWidth, imageHeight));
+        print(zoneMarkers);
     setState(() {});
   }
 
@@ -175,6 +177,12 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
       top: screenCoords.dy,
       child: Icon(Icons.crop_square),
     );
+  }
+
+  void refresh() {
+    setState(() {
+      zoneMarkers = [];
+    });
   }
 
   @override
@@ -225,7 +233,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
               ),
               IconButton(
                 icon: Icon(Icons.refresh),
-                onPressed: () {},
+                onPressed: () {
+                  refresh();
+                },
               )
             ],
           ),
