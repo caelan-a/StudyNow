@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'main.dart';
+import 'dart:math';
 import 'database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -9,7 +10,6 @@ import 'package:image/image.dart' as imageutil;
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
-const Offset TOUCH_SCREEN_OFFSET = Offset(20.0, 100.0);
 
 class ChooseZoneScreen extends StatefulWidget {
   final String firebaseImagePath;
@@ -19,7 +19,10 @@ class ChooseZoneScreen extends StatefulWidget {
   _ChooseZoneScreenState createState() => _ChooseZoneScreenState();
 }
 
-class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
+class _ChooseZoneScreenState extends State<ChooseZoneScreen>
+    with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
   File _imageFile;
 
   //  Pixels
@@ -34,9 +37,28 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   List<Offset> zoneMarkers = [];
 
   @override
-  void initState() {
-    _photoViewController = PhotoViewController();
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
+  void _startAnimation() {
+    _controller.stop();
+    _controller.reset();
+    _controller.repeat(
+      period: Duration(seconds: 1),
+    );
+  }
+
+  @override
+  void initState() {
+    _controller = new AnimationController(
+      vsync: this,
+    );
+    _startAnimation();
+
+
+    _photoViewController = PhotoViewController();
     //  Set state of this widget to update icons when user scales or translates image
     _photoViewController.outputStateStream.listen((onData) {
       setState(() {
@@ -149,15 +171,17 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
         Offset(screenSize.width / 2, screenSize.height / 2);
     Offset imageOffsetFromCenter = controller.position; // Offset from center
 
-    double x = screenCenterPoint.dx + centerOffset.dx * (controller.scale * imageWidth / 2.0);
-    x += (imageOffsetFromCenter.dx);
+    // double x = screenCenterPoint.dx +
+    //     centerOffset.dx * (controller.scale * imageWidth / 2.0);
+    // x += (imageOffsetFromCenter.dx);
 
-    double y = screenCenterPoint.dy + (controller.scale * (centerOffset.dy * (imageHeight/ 2.0)));
-    y += ( controller.scale*imageOffsetFromCenter.dy);
+    // double y = screenCenterPoint.dy +
+    //     (controller.scale * (centerOffset.dy * (imageHeight / 2.0)));
+    // y += (controller.scale * imageOffsetFromCenter.dy);
 
-    print("\nx: $x\ny: $y\nscale: ${controller.scale}");
+    // print("\nx: $x\ny: $y\nscale: ${controller.scale}");
     print("imageOffset: $imageOffsetFromCenter");
-    Offset screenCoords = Offset(x, y);
+    Offset screenCoords = Offset(0.0, 0.0);
     return screenCoords;
   }
 
@@ -165,7 +189,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     Offset touchPoint = details.globalPosition; // Offset from top right corner
 
     zoneMarkers = [];
-    zoneMarkers.add(convertToImageCoords(touchPoint, _photoViewController, imageWidth, imageHeight));
+    zoneMarkers.add(Offset(0.25, 0.25));
     setState(() {});
   }
 
@@ -173,12 +197,13 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   Widget _buildMarker(Offset centerOffset) {
     Offset screenCoords = convertToScreenCoords(
         centerOffset, _photoViewController, imageWidth, imageHeight);
-
     // print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
-    return Positioned(
-      left: screenCoords.dx,
-      top: screenCoords.dy,
-      child: Icon(Icons.crop_square),
+    return CustomPaint(
+      painter: new SpritePainter(_controller),
+      child: new SizedBox(
+        width: 100.0,
+        height: 100.0,
+      ),
     );
   }
 
@@ -266,5 +291,37 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
                 },
                 child: Stack(children: stackChildren),
               ));
+  }
+}
+
+class SpritePainter extends CustomPainter {
+  final Animation<double> _animation;
+
+  SpritePainter(this._animation) : super(repaint: _animation);
+
+  void circle(Canvas canvas, Rect rect, double value) {
+    double opacity = (1.0 - (value / 4.0)).clamp(0.0, 1.0);
+    Color color = new Color.fromRGBO(0, 117, 194, opacity);
+
+    double size = rect.width / 2;
+    double area = size * size;
+    double radius = sqrt(area * value / 4);
+
+    final Paint paint = new Paint()..color = color;
+    canvas.drawCircle(rect.center, radius, paint);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Rect rect = new Rect.fromLTRB(0.0, 0.0, size.width, size.height);
+
+    for (int wave = 3; wave >= 0; wave--) {
+      circle(canvas, rect, wave + _animation.value);
+    }
+  }
+
+  @override
+  bool shouldRepaint(SpritePainter oldDelegate) {
+    return true;
   }
 }
