@@ -98,14 +98,18 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        onWillPop: () async => true,
-        child: Scaffold(
-          appBar: AppBar(
+    AppBar appBar = AppBar(
             title: const Text('Initialise Camera'),
             centerTitle: true,
             actions: <Widget>[],
-          ),
+          );
+
+    Main.appBarHeight = appBar.preferredSize.height;
+
+    return WillPopScope(
+        onWillPop: () async => true,
+        child: Scaffold(
+          appBar: appBar,
           body: Navigator(onGenerateRoute: (RouteSettings settings) {
             return MaterialPageRoute(builder: (context) {
               return CountChairsScreen(

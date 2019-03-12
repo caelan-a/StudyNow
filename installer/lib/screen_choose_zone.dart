@@ -145,7 +145,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     double scale = controller.scale; // scale image has been dilated by
 
     Offset screenCenterPoint =
-        Offset(screenSize.width / 2, screenSize.height / 2);
+        Offset(screenSize.width / 2, (screenSize.height / 2) - Main.appBarHeight);
 
     Offset touchOffsetFromCenter = touchPoint - screenCenterPoint;
     Offset touchOffsetFromCenterOfImage =
@@ -171,25 +171,20 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         Offset(screenSize.width / 2, screenSize.height / 2);
     Offset imageOffsetFromCenter = controller.position; // Offset from center
 
-    // double x = screenCenterPoint.dx +
-    //     centerOffset.dx * (controller.scale * imageWidth / 2.0);
-    // x += (imageOffsetFromCenter.dx);
+    double x = centerOffset.dx;
+    double y = centerOffset.dy;
 
-    // double y = screenCenterPoint.dy +
-    //     (controller.scale * (centerOffset.dy * (imageHeight / 2.0)));
-    // y += (controller.scale * imageOffsetFromCenter.dy);
-
-    // print("\nx: $x\ny: $y\nscale: ${controller.scale}");
+    print("\nx: $x\ny: $y\nscale: ${controller.scale}");
     print("imageOffset: $imageOffsetFromCenter");
-    Offset screenCoords = Offset(0.0, 0.0);
+    Offset screenCoords = Offset(x, y);
     return screenCoords;
   }
 
   void onTouch(TapUpDetails details) async {
-    Offset touchPoint = details.globalPosition; // Offset from top right corner
+    Offset touchPoint = details.globalPosition.translate(0.0, -Main.appBarHeight/2); // Offset from top right corner
 
     zoneMarkers = [];
-    zoneMarkers.add(Offset(0.25, 0.25));
+    zoneMarkers.add(touchPoint);
     setState(() {});
   }
 
@@ -197,12 +192,14 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
   Widget _buildMarker(Offset centerOffset) {
     Offset screenCoords = convertToScreenCoords(
         centerOffset, _photoViewController, imageWidth, imageHeight);
-    // print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
+    
+    double size = 250.0 * _photoViewController.scale;
+
     return CustomPaint(
-      painter: new SpritePainter(_controller),
+      painter: new SpritePainter(_controller, Offset(screenCoords.dx,screenCoords.dy - Main.appBarHeight)),
       child: new SizedBox(
-        width: 100.0,
-        height: 100.0,
+        width: size,
+        height: size,
       ),
     );
   }
@@ -296,19 +293,20 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
 
 class SpritePainter extends CustomPainter {
   final Animation<double> _animation;
+  final Offset offset;
 
-  SpritePainter(this._animation) : super(repaint: _animation);
+  SpritePainter(this._animation, this.offset) : super(repaint: _animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
-    double opacity = (1.0 - (value / 4.0)).clamp(0.0, 1.0);
-    Color color = new Color.fromRGBO(0, 117, 194, opacity);
+    double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
+    Color color = new Color.fromRGBO(0, 117, 0, opacity);
 
     double size = rect.width / 2;
     double area = size * size;
     double radius = sqrt(area * value / 4);
 
     final Paint paint = new Paint()..color = color;
-    canvas.drawCircle(rect.center, radius, paint);
+    canvas.drawCircle(offset, radius, paint);
   }
 
   @override

@@ -5,6 +5,8 @@ import 'screen_home.dart';
 void main() => runApp(Main());
 
 class Main extends StatelessWidget {
+  static double appBarHeight;
+
   static final GlobalKey<NavigatorState> _rootNavKey =
       GlobalKey<NavigatorState>();
 
