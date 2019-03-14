@@ -22,7 +22,9 @@ const double DIST_TO_DELETE =
 
 class ChooseZoneScreen extends StatefulWidget {
   final String firebaseImagePath;
-  ChooseZoneScreen({@required this.firebaseImagePath});
+  Function(double, Offset) onComplete;
+
+  ChooseZoneScreen({@required this.firebaseImagePath, this.onComplete});
 
   @override
   _ChooseZoneScreenState createState() => _ChooseZoneScreenState();
@@ -300,7 +302,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
             'Done',
             style: TextStyle(fontSize: 16.0),
           ),
-          onPressed: () {},
+          onPressed: (){
+            widget.onComplete(_sizeSliderValue, zoneMarkers[0]);
+          },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomAppBar(

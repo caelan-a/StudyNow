@@ -15,8 +15,10 @@ class CountChairsScreen extends StatefulWidget {
   String firebaseFloorplanPath;
 
   Function(int) onComplete;
+  Function(double, Offset) onChooseZoneComplete;
 
-  CountChairsScreen({this.firebaseImagePath, this.onComplete, this.firebaseFloorplanPath});
+
+  CountChairsScreen({this.firebaseImagePath, this.onComplete, this.firebaseFloorplanPath, this.onChooseZoneComplete});
 
   @override
   _CountChairsScreenState createState() => _CountChairsScreenState();
@@ -155,7 +157,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
         onPressed: () {
           widget.onComplete(_chairMarkers.length);
           Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => ChooseZoneScreen(firebaseImagePath: widget.firebaseFloorplanPath,)));
+              MaterialPageRoute(builder: (context) => ChooseZoneScreen(firebaseImagePath: widget.firebaseFloorplanPath, onComplete: widget.onChooseZoneComplete)));
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

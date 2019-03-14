@@ -27,13 +27,26 @@ class InitialiseCameraScreen extends StatefulWidget {
 
 class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
   String _cameraName;
+  String _firebaseZonePath;
   String _firebaseImagePath;
   String _firebaseFloorplanPath;
 
   int _numChairsPresent;
+  double _markerSize;
+  Offset _markerLocation;
 
   void setNumChairsPresent(int count) {
     _numChairsPresent = count;
+  }
+
+  void setMarkerInfo(double size, Offset location) {
+    _markerSize = size;
+    _markerLocation = location;
+  }
+
+  void onChooseZoneComplete(double size, Offset location) {
+    setMarkerInfo(size, location);
+    submitInfo();
   }
 
   void submitInfo() {
@@ -43,44 +56,23 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
       duration: Duration(seconds: 5),
     ));
     Navigator.pop(context);
-    Database.setCameraZoneInformation(_firebaseImagePath, _numChairsPresent)
+    Navigator.pop(context);
+    Database.setCameraZoneInformation(_firebaseZonePath, _numChairsPresent, _markerSize, _markerLocation.dx, _markerLocation.dy)
         .then((onValue) {});
   }
-
-  // Future<File> downloadFile(String fileName) async {
-  //   print("Downloading image: $fileName from FirebaseStorage..");
-  //   Directory tempDir = Directory.systemTemp;
-  //   final File file = File('${tempDir.path}/$fileName');
-
-  // final StorageReference ref = FirebaseStorage.instance.ref().child(fileName);
-  //   final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-
-  //   downloadTask.future.then((snapshot) {
-  //     setState(() {
-  //       _remoteImage = file;
-  //       _imageLoaded = true;
-  //       if (shouldShowDialog) {
-  //         showInstructionDialog();
-  //         shouldShowDialog = false;
-  //       }
-  //     });
-  //   });
-
-  //   return file;
-  // }
 
   @override
   void initState() {
     _cameraName = "Camera " + widget.cameraZone;
-    _firebaseImagePath = "/libraries/" +
+    _firebaseZonePath = "/libraries/" +
         widget.library +
         "/floors" +
         "/" +
         widget.floor +
         "/camera_zones" +
         "/" +
-        widget.cameraZone +
-        "/" +
+        widget.cameraZone;
+    _firebaseImagePath = _firebaseZonePath + "/" +
         "image.jpg" +
         "";
 
@@ -99,10 +91,10 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
   @override
   Widget build(BuildContext context) {
     AppBar appBar = AppBar(
-            title: const Text('Initialise Camera'),
-            centerTitle: true,
-            actions: <Widget>[],
-          );
+      title: const Text('Initialise Camera'),
+      centerTitle: true,
+      actions: <Widget>[],
+    );
 
     Main.appBarHeight = appBar.preferredSize.height;
     Main.appBarHeight = 0.0;
@@ -110,14 +102,10 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
     return WillPopScope(
         onWillPop: () async => true,
         child: Scaffold(
-          body: Navigator(onGenerateRoute: (RouteSettings settings) {
-            return MaterialPageRoute(builder: (context) {
-              return CountChairsScreen(
-                  firebaseImagePath: _firebaseImagePath,
-                  onComplete: setNumChairsPresent,
-                  firebaseFloorplanPath: _firebaseFloorplanPath);
-            });
-          }),
-        ));
+            body: CountChairsScreen(
+                firebaseImagePath: _firebaseImagePath,
+                onComplete: setNumChairsPresent,
+                onChooseZoneComplete: onChooseZoneComplete,
+                firebaseFloorplanPath: _firebaseFloorplanPath)));
   }
 }
