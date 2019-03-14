@@ -54,118 +54,119 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
     super.initState();
   }
 
+  GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        onWillPop: () async => true,
+        onWillPop: () async => !await navKey.currentState.maybePop(),
         child: Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(
             title: const Text('Choose Camera'),
             centerTitle: true,
             actions: <Widget>[],
+            leading: IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {},
+            ),
           ),
-          body: Navigator(onGenerateRoute: (RouteSettings settings) {
-            return MaterialPageRoute(builder: (context) {
-              return _buildFirebaseList(_collectionToDisplayPath, _scaffoldKey);
-            });
-          }),
+          body: Navigator(
+              key: navKey,
+              onGenerateRoute: (RouteSettings settings) {
+                return MaterialPageRoute(builder: (context) {
+                  return _buildFirebaseList(
+                      _collectionToDisplayPath, _scaffoldKey);
+                });
+              }),
         ));
   }
 
   Widget _buildFirebaseList(collectionPath, scaffoldKey) {
-    return WillPopScope(
-        onWillPop: () async {
-          print("pop");
-          return true;
-        },
-        child: Scaffold(
-            body: StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection(collectionPath).snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return Center(
-                    child: Column(
+    return Scaffold(
+        body: StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection(collectionPath).snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor),
+                ),
+              ],
+            ));
+          default:
+            return new ListView(
+              children:
+                  snapshot.data.documents.map((DocumentSnapshot document) {
+                return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).primaryColor),
+                    ListTile(
+                      // dense: true,
+                      // padding: EdgeInsets.all(20.0),
+                      // color: index % 2 == 0 ? Colors.grey[200] : Colors.grey[0],
+                      title: Text(
+                        document['title'],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 20.0,
+                            color: Colors.grey[600]),
+                      ),
+                      onTap: () {
+                        //  Store selection info
+                        if (_currentCollectionName == "libraries") {
+                          _chosenLibrary = document.documentID;
+                        } else if (_currentCollectionName == "floors") {
+                          _chosenFloor = document.documentID;
+                        } else if (_currentCollectionName == "camera_zones") {
+                          _chosenCameraZone = document.documentID;
+                        }
+
+                        //  Check if need to search more collections or all information is retreieved
+                        if (_currentCollectionName != "camera_zones") {
+                          String nextCollectionPath = collectionPath +
+                              "/" +
+                              document.documentID +
+                              "/" +
+                              document['nextCollection'];
+                          _collectionToDisplayPath = nextCollectionPath;
+
+                          //  Push a new collection
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => _buildFirebaseList(
+                                  nextCollectionPath, _scaffoldKey)));
+                          _currentCollectionName = document['nextCollection'];
+                        } else {
+                          //  No more collections to search
+                          Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(
+                              builder: (context) => InitialiseCameraScreen(
+                                    library: _chosenLibrary,
+                                    floor: _chosenFloor,
+                                    cameraZone: _chosenCameraZone,
+                                    prevScaffoldKey: scaffoldKey,
+                                  ),
+                            ),
+                          );
+                        }
+                      },
                     ),
+                    Divider(),
                   ],
-                ));
-              default:
-                return new ListView(
-                  children:
-                      snapshot.data.documents.map((DocumentSnapshot document) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        ListTile(
-                          // dense: true,
-                          // padding: EdgeInsets.all(20.0),
-                          // color: index % 2 == 0 ? Colors.grey[200] : Colors.grey[0],
-                          title: Text(
-                            document['title'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                fontSize: 20.0,
-                                color: Colors.grey[600]),
-                          ),
-                          onTap: () {
-                            //  Store selection info
-                            if (_currentCollectionName == "libraries") {
-                              _chosenLibrary = document.documentID;
-                            } else if (_currentCollectionName == "floors") {
-                              _chosenFloor = document.documentID;
-                            } else if (_currentCollectionName ==
-                                "camera_zones") {
-                              _chosenCameraZone = document.documentID;
-                            }
-
-                            //  Check if need to search more collections or all information is retreieved
-                            if (_currentCollectionName != "camera_zones") {
-                              String nextCollectionPath = collectionPath +
-                                  "/" +
-                                  document.documentID +
-                                  "/" +
-                                  document['nextCollection'];
-                              _collectionToDisplayPath = nextCollectionPath;
-
-                              //  Push a new collection
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => _buildFirebaseList(
-                                      nextCollectionPath, _scaffoldKey)));
-                              _currentCollectionName =
-                                  document['nextCollection'];
-                            } else {
-                              //  No more collections to search
-                              Navigator.of(context, rootNavigator: true).push(
-                                MaterialPageRoute(
-                                  builder: (context) => InitialiseCameraScreen(
-                                        library: _chosenLibrary,
-                                        floor: _chosenFloor,
-                                        cameraZone: _chosenCameraZone,
-                                        prevScaffoldKey: scaffoldKey,
-                                      ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        Divider(),
-                      ],
-                    );
-                  }).toList(),
                 );
-            }
-          },
-        )));
+              }).toList(),
+            );
+        }
+      },
+    ));
   }
 }
