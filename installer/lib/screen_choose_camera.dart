@@ -80,7 +80,9 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
             actions: <Widget>[],
             leading: IconButton(
               icon: Icon(Icons.home),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
           ),
           body: Navigator(
