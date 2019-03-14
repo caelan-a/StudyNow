@@ -59,7 +59,19 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        onWillPop: () async => !await navKey.currentState.maybePop(),
+        onWillPop: () async {
+          if (await navKey.currentState.maybePop()) {
+            print("NEST BACK");
+            setState(() {
+              _collectionToDisplayPath =
+                  getPreviousCollection(_collectionToDisplayPath);
+              _currentCollectionName = _collectionToDisplayPath.split('/').last;
+            });
+            return false;
+          } else {
+            return true;
+          }
+        },
         child: Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(

@@ -136,7 +136,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
             textAlign: TextAlign.center,
           ),
           content: Text(
-            "Mark points on the map to show what area the camera covers",
+            "Please mark points on the map to show what area the camera covers",
             textAlign: TextAlign.center,
           ),
           actions: <Widget>[
@@ -160,7 +160,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     Size screenSize =
         MediaQuery.of(context).size; // pixel size of device screen
     Offset imageOffsetFromCenter = controller.position; // Offset from center
-    double scale = controller.scale==null?0.27:controller.scale; // scale image has been dilated by
+    double scale = controller.scale == null
+        ? 0.27
+        : controller.scale; // scale image has been dilated by
 
     Offset screenCenterPoint = Offset(
         screenSize.width / 2, (screenSize.height / 2) - Main.appBarHeight);
@@ -189,7 +191,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         screenSize.height / 2); // Device pixels point of center
     Offset imageTranslation =
         controller.position; // Offset from center off image in photoview
-    double scale = controller.scale==null?0.27:controller.scale; // scale image has been dilated by
+    double scale = controller.scale == null
+        ? 0.27
+        : controller.scale; // scale image has been dilated by
 
     double x = screenCenterPoint.dx +
         scale * (centerOffset.dx * imageWidth / 2.0) +
@@ -221,14 +225,13 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     double scale =
         _photoViewController.scale == null ? 0.27 : _photoViewController.scale;
 
-    double size = 40* MAX_MARKER_SIZE * _sizeSliderValue;
+    double size = 40 * MAX_MARKER_SIZE * _sizeSliderValue;
 
     return CustomPaint(
       willChange: true,
       painter: new SpritePainter(
           _controller, Offset(screenCoords.dx, screenCoords.dy), size, scale),
       child: new SizedBox(
-
         width: size,
         height: 50.0,
       ),
@@ -237,6 +240,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
 
   void refresh() {
     setState(() {
+      _sizeSliderValue = 0.25;
       zoneMarkers = [];
     });
   }
@@ -302,8 +306,13 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
             'Done',
             style: TextStyle(fontSize: 16.0),
           ),
-          onPressed: (){
-            widget.onComplete(_sizeSliderValue, zoneMarkers[0]);
+          onPressed: () {
+            if (zoneMarkers.length < 1) {
+              //  No marker placed
+              showInstructionDialog();
+            } else {
+              widget.onComplete(_sizeSliderValue, zoneMarkers[0]);
+            }
           },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -319,6 +328,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
                   _controller.dispose();
                   _photoViewController.dispose();
                   Navigator.pop(context);
+  
                 },
               ),
               IconButton(
@@ -362,13 +372,14 @@ class SpritePainter extends CustomPainter {
   final width;
   final scale;
 
-  SpritePainter(this._animation, this.offset, this.width, this.scale) : super(repaint: _animation);
+  SpritePainter(this._animation, this.offset, this.width, this.scale)
+      : super(repaint: _animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
     Color color = new Color.fromRGBO(0, 117, 151, opacity);
 
-    double radius = scale*sqrt(width * value);
+    double radius = scale * sqrt(width * value);
 
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(offset, radius, paint);

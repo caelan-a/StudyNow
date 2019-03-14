@@ -17,8 +17,11 @@ class CountChairsScreen extends StatefulWidget {
   Function(int) onComplete;
   Function(double, Offset) onChooseZoneComplete;
 
-
-  CountChairsScreen({this.firebaseImagePath, this.onComplete, this.firebaseFloorplanPath, this.onChooseZoneComplete});
+  CountChairsScreen(
+      {this.firebaseImagePath,
+      this.onComplete,
+      this.firebaseFloorplanPath,
+      this.onChooseZoneComplete});
 
   @override
   _CountChairsScreenState createState() => _CountChairsScreenState();
@@ -80,7 +83,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
   bool shouldDeleteMarkers(TapUpDetails details) {
     Offset tapLocation = details.globalPosition;
-        
+
     for (var marker in _chairMarkers) {
       if ((marker - tapLocation).distance < DIST_TO_DELETE) {
         _chairMarkers.remove(marker);
@@ -126,7 +129,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
     if (_imageLoaded) {
       stackChildren.add(Image.file(_imageFile, fit: BoxFit.fitWidth));
-      
+
       int pixelOffset = 20;
 
       stackChildren.addAll(_chairMarkers
@@ -135,15 +138,37 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
                   left: offset.dx - pixelOffset,
                   top: offset.dy - pixelOffset,
                   child: Image.asset(
-                    
                     'assets/chair_icon.png',
-                    alignment: Alignment(-0.5,0.5),
+                    alignment: Alignment(-0.5, 0.5),
                     width: 40.0,
                     height: 40.0,
                   ),
                 ),
           )
           .toList());
+      stackChildren.add(
+        Positioned(
+          width: MediaQuery.of(context).size.width / 8,
+          top: 30.0,
+          left: MediaQuery.of(context).size.width / 2.0 -
+              MediaQuery.of(context).size.width / 8 / 2.0,
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withAlpha(150),
+                borderRadius: BorderRadius.circular(20.0)),
+            alignment: Alignment.center,
+            height: 30.0,
+            child: Text(
+              "${_chairMarkers.length}",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 20.0),
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -156,8 +181,10 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
         ),
         onPressed: () {
           widget.onComplete(_chairMarkers.length);
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => ChooseZoneScreen(firebaseImagePath: widget.firebaseFloorplanPath, onComplete: widget.onChooseZoneComplete)));
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ChooseZoneScreen(
+                  firebaseImagePath: widget.firebaseFloorplanPath,
+                  onComplete: widget.onChooseZoneComplete)));
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -167,16 +194,11 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Container(
-              padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
-              child: Text(
-                "${_chairMarkers.length}",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                    fontSize: 20.0),
-              ),
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
             IconButton(
               icon: Icon(Icons.refresh),
