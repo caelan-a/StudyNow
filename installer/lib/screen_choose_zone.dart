@@ -158,7 +158,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     Size screenSize =
         MediaQuery.of(context).size; // pixel size of device screen
     Offset imageOffsetFromCenter = controller.position; // Offset from center
-    double scale = controller.scale; // scale image has been dilated by
+    double scale = controller.scale==null?0.27:controller.scale; // scale image has been dilated by
 
     Offset screenCenterPoint = Offset(
         screenSize.width / 2, (screenSize.height / 2) - Main.appBarHeight);
@@ -187,15 +187,16 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         screenSize.height / 2); // Device pixels point of center
     Offset imageTranslation =
         controller.position; // Offset from center off image in photoview
+    double scale = controller.scale==null?0.27:controller.scale; // scale image has been dilated by
 
     double x = screenCenterPoint.dx +
-        controller.scale * (centerOffset.dx * imageWidth / 2.0) +
+        scale * (centerOffset.dx * imageWidth / 2.0) +
         imageTranslation.dx;
     double y = screenCenterPoint.dy +
-        controller.scale * (centerOffset.dy * imageHeight / 2.0) +
+        scale * ((centerOffset.dy) * imageHeight / 2.0) +
         imageTranslation.dy;
 
-    print("\nx: $x\ny: $y\nscale: ${controller.scale}");
+    print("\nx: $x\ny: $y\nscale: ${scale}");
     Offset screenCoords = Offset(x, y);
     return screenCoords;
   }
@@ -263,12 +264,13 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
             decoration: BoxDecoration(
                 color: Theme.of(context)
                     .primaryColor
-                    .withAlpha(_highlightSlider ? 50 : 40),
+                    .withAlpha(_highlightSlider ? 40 : 30),
                 borderRadius: BorderRadius.circular(20.0)),
             alignment: Alignment.center,
             height: 30.0,
             child: Slider(
               label: "Area Size",
+              min: 0.1,
               value: _sizeSliderValue,
               onChanged: (value) => _onSliderValueChanged(value),
               onChangeStart: (value) {
@@ -310,6 +312,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
               IconButton(
                 icon: Icon(Icons.arrow_back),
                 onPressed: () {
+                  _controller.dispose();
+                  _photoViewController.dispose();
                   Navigator.pop(context);
                 },
               ),
