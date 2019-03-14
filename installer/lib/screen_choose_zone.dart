@@ -15,7 +15,7 @@ TO IMPLEMENT
 3. Fix going back and nested navigation
 */
 
-const int MAX_MARKER_SIZE = 550;
+const int MAX_MARKER_SIZE = 650;
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
@@ -218,15 +218,16 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     double scale =
         _photoViewController.scale == null ? 0.27 : _photoViewController.scale;
 
-    double size = MAX_MARKER_SIZE * _sizeSliderValue * scale;
+    double size = 40* MAX_MARKER_SIZE * _sizeSliderValue;
 
     return CustomPaint(
+      willChange: true,
       painter: new SpritePainter(
-          _controller, Offset(screenCoords.dx, screenCoords.dy)),
+          _controller, Offset(screenCoords.dx, screenCoords.dy), size, scale),
       child: new SizedBox(
 
         width: size,
-        height: 0.0,
+        height: 50.0,
       ),
     );
   }
@@ -350,16 +351,16 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
 class SpritePainter extends CustomPainter {
   final Animation<double> _animation;
   final Offset offset;
+  final width;
+  final scale;
 
-  SpritePainter(this._animation, this.offset) : super(repaint: _animation);
+  SpritePainter(this._animation, this.offset, this.width, this.scale) : super(repaint: _animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
     Color color = new Color.fromRGBO(0, 117, 151, opacity);
 
-    double size = rect.width / 2;
-    double area = size * size;
-    double radius = sqrt(area * value / 4);
+    double radius = scale*sqrt(width * value);
 
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(offset, radius, paint);
