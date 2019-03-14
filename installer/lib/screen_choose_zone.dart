@@ -15,6 +15,8 @@ TO IMPLEMENT
 3. Fix going back and nested navigation
 */
 
+const int MAX_MARKER_SIZE = 550;
+
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
 
@@ -27,7 +29,7 @@ class ChooseZoneScreen extends StatefulWidget {
 }
 
 class _ChooseZoneScreenState extends State<ChooseZoneScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   AnimationController _controller;
 
   File _imageFile;
@@ -43,7 +45,13 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
 
   List<Offset> zoneMarkers = [];
 
-
+  double _sizeSliderValue = 0.25;
+  bool _highlightSlider = false;
+  void _onSliderValueChanged(double value) {
+    setState(() {
+      _sizeSliderValue = value;
+    });
+  }
 
   @override
   void dispose() {
@@ -164,8 +172,6 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     double yPercentageFromCenter =
         touchOffsetFromCenterOfImage.dy / scale / (imageHeight / 2.0);
 
-        
-
     print("\nxPerc: $xPercentageFromCenter\nyPerc: $yPercentageFromCenter");
 
     return Offset(xPercentageFromCenter, yPercentageFromCenter);
@@ -177,12 +183,17 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
       PhotoViewController controller, int imageWidth, int imageHeight) {
     Size screenSize =
         MediaQuery.of(context).size; // pixel size of device screen
-    Offset screenCenterPoint =
-        Offset(screenSize.width / 2, screenSize.height / 2); // Device pixels point of center
-    Offset imageTranslation = controller.position; // Offset from center off image in photoview
+    Offset screenCenterPoint = Offset(screenSize.width / 2,
+        screenSize.height / 2); // Device pixels point of center
+    Offset imageTranslation =
+        controller.position; // Offset from center off image in photoview
 
-    double x = screenCenterPoint.dx + controller.scale * (centerOffset.dx * imageWidth / 2.0) + imageTranslation.dx;
-    double y = screenCenterPoint.dy + controller.scale * (centerOffset.dy * imageHeight / 2.0) + imageTranslation.dy;
+    double x = screenCenterPoint.dx +
+        controller.scale * (centerOffset.dx * imageWidth / 2.0) +
+        imageTranslation.dx;
+    double y = screenCenterPoint.dy +
+        controller.scale * (centerOffset.dy * imageHeight / 2.0) +
+        imageTranslation.dy;
 
     print("\nx: $x\ny: $y\nscale: ${controller.scale}");
     Offset screenCoords = Offset(x, y);
@@ -194,7 +205,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         .translate(0.0, -Main.appBarHeight / 2); // Offset from top right corner
 
     zoneMarkers = [];
-    zoneMarkers.add(convertToImageCoords(touchPoint, _photoViewController, imageWidth, imageHeight));
+    zoneMarkers.add(convertToImageCoords(
+        touchPoint, _photoViewController, imageWidth, imageHeight));
     setState(() {});
   }
 
@@ -203,19 +215,18 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     Offset screenCoords = convertToScreenCoords(
         centerOffset, _photoViewController, imageWidth, imageHeight);
 
-    double scale = _photoViewController.scale == null
-            ? 0.27
-            : _photoViewController.scale;
+    double scale =
+        _photoViewController.scale == null ? 0.27 : _photoViewController.scale;
 
-
-    double size = 250.0 * scale;
+    double size = MAX_MARKER_SIZE * _sizeSliderValue * scale;
 
     return CustomPaint(
-      painter: new SpritePainter(_controller,
-          Offset(screenCoords.dx, screenCoords.dy)),
+      painter: new SpritePainter(
+          _controller, Offset(screenCoords.dx, screenCoords.dy)),
       child: new SizedBox(
+
         width: size,
-        height: size,
+        height: 0.0,
       ),
     );
   }
@@ -239,6 +250,40 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         minScale: PhotoViewComputedScale.contained * 0.8,
         maxScale: 4.0,
       )));
+
+      //  Add size slider
+      stackChildren.add(
+        Positioned(
+          width: MediaQuery.of(context).size.width / 1.5,
+          bottom: 30.0,
+          left: MediaQuery.of(context).size.width / 2.0 -
+              MediaQuery.of(context).size.width / 1.5 / 2.0,
+          child: Container(
+            decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .primaryColor
+                    .withAlpha(_highlightSlider ? 50 : 40),
+                borderRadius: BorderRadius.circular(20.0)),
+            alignment: Alignment.center,
+            height: 30.0,
+            child: Slider(
+              label: "Area Size",
+              value: _sizeSliderValue,
+              onChanged: (value) => _onSliderValueChanged(value),
+              onChangeStart: (value) {
+                setState(() {
+                  _highlightSlider = true;
+                });
+              },
+              onChangeEnd: (value) {
+                setState(() {
+                  _highlightSlider = false;
+                });
+              },
+            ),
+          ),
+        ),
+      );
 
       stackChildren
           .addAll(zoneMarkers.map((Offset o) => _buildMarker(o)).toList());
@@ -273,7 +318,6 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
                   refresh();
                 },
               ),
-              
             ],
           ),
         ),
