@@ -8,6 +8,13 @@ import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 
+/*
+TO IMPLEMENT
+1. Animating marker to shrink, move then appear at next point and expand
+2. Add slider in to set size of marker
+3. Fix going back and nested navigation
+*/
+
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
 
@@ -36,6 +43,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
 
   List<Offset> zoneMarkers = [];
 
+
+
   @override
   void dispose() {
     _controller.dispose();
@@ -56,7 +65,6 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
       vsync: this,
     );
     _startAnimation();
-
 
     _photoViewController = PhotoViewController();
     //  Set state of this widget to update icons when user scales or translates image
@@ -144,8 +152,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     Offset imageOffsetFromCenter = controller.position; // Offset from center
     double scale = controller.scale; // scale image has been dilated by
 
-    Offset screenCenterPoint =
-        Offset(screenSize.width / 2, (screenSize.height / 2) - Main.appBarHeight);
+    Offset screenCenterPoint = Offset(
+        screenSize.width / 2, (screenSize.height / 2) - Main.appBarHeight);
 
     Offset touchOffsetFromCenter = touchPoint - screenCenterPoint;
     Offset touchOffsetFromCenterOfImage =
@@ -155,6 +163,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
         touchOffsetFromCenterOfImage.dx / scale / (imageWidth / 2.0);
     double yPercentageFromCenter =
         touchOffsetFromCenterOfImage.dy / scale / (imageHeight / 2.0);
+
+        
 
     print("\nxPerc: $xPercentageFromCenter\nyPerc: $yPercentageFromCenter");
 
@@ -168,23 +178,23 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
     Size screenSize =
         MediaQuery.of(context).size; // pixel size of device screen
     Offset screenCenterPoint =
-        Offset(screenSize.width / 2, screenSize.height / 2);
-    Offset imageOffsetFromCenter = controller.position; // Offset from center
+        Offset(screenSize.width / 2, screenSize.height / 2); // Device pixels point of center
+    Offset imageTranslation = controller.position; // Offset from center off image in photoview
 
-    double x = centerOffset.dx;
-    double y = centerOffset.dy;
+    double x = screenCenterPoint.dx + controller.scale * (centerOffset.dx * imageWidth / 2.0) + imageTranslation.dx;
+    double y = screenCenterPoint.dy + controller.scale * (centerOffset.dy * imageHeight / 2.0) + imageTranslation.dy;
 
     print("\nx: $x\ny: $y\nscale: ${controller.scale}");
-    print("imageOffset: $imageOffsetFromCenter");
     Offset screenCoords = Offset(x, y);
     return screenCoords;
   }
 
   void onTouch(TapUpDetails details) async {
-    Offset touchPoint = details.globalPosition.translate(0.0, -Main.appBarHeight/2); // Offset from top right corner
+    Offset touchPoint = details.globalPosition
+        .translate(0.0, -Main.appBarHeight / 2); // Offset from top right corner
 
     zoneMarkers = [];
-    zoneMarkers.add(touchPoint);
+    zoneMarkers.add(convertToImageCoords(touchPoint, _photoViewController, imageWidth, imageHeight));
     setState(() {});
   }
 
@@ -192,11 +202,17 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
   Widget _buildMarker(Offset centerOffset) {
     Offset screenCoords = convertToScreenCoords(
         centerOffset, _photoViewController, imageWidth, imageHeight);
-    
-    double size = 250.0 * _photoViewController.scale;
+
+    double scale = _photoViewController.scale == null
+            ? 0.27
+            : _photoViewController.scale;
+
+
+    double size = 250.0 * scale;
 
     return CustomPaint(
-      painter: new SpritePainter(_controller, Offset(screenCoords.dx,screenCoords.dy - Main.appBarHeight)),
+      painter: new SpritePainter(_controller,
+          Offset(screenCoords.dx, screenCoords.dy)),
       child: new SizedBox(
         width: size,
         height: size,
@@ -245,23 +261,19 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen>
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Container(
-                padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
-                child: Text(
-                  "",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 20.0),
-                ),
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
               ),
               IconButton(
                 icon: Icon(Icons.refresh),
                 onPressed: () {
                   refresh();
                 },
-              )
+              ),
+              
             ],
           ),
         ),
@@ -299,7 +311,7 @@ class SpritePainter extends CustomPainter {
 
   void circle(Canvas canvas, Rect rect, double value) {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
-    Color color = new Color.fromRGBO(0, 117, 0, opacity);
+    Color color = new Color.fromRGBO(0, 117, 151, opacity);
 
     double size = rect.width / 2;
     double area = size * size;

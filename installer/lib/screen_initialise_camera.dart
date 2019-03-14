@@ -105,11 +105,11 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
           );
 
     Main.appBarHeight = appBar.preferredSize.height;
+    Main.appBarHeight = 0.0;
 
     return WillPopScope(
         onWillPop: () async => true,
         child: Scaffold(
-          appBar: appBar,
           body: Navigator(onGenerateRoute: (RouteSettings settings) {
             return MaterialPageRoute(builder: (context) {
               return CountChairsScreen(

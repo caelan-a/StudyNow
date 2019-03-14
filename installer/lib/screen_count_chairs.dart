@@ -72,15 +72,13 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
   }
 
   void addChairMarker(TapUpDetails details) {
-    _chairMarkers.add(details.globalPosition
-        .translate(TOUCH_SCREEN_OFFSET.dx, TOUCH_SCREEN_OFFSET.dy));
+    _chairMarkers.add(details.globalPosition);
     setState(() {});
   }
 
   bool shouldDeleteMarkers(TapUpDetails details) {
-    Offset tapLocation = details.globalPosition
-        .translate(TOUCH_SCREEN_OFFSET.dx, TOUCH_SCREEN_OFFSET.dy);
-
+    Offset tapLocation = details.globalPosition;
+        
     for (var marker in _chairMarkers) {
       if ((marker - tapLocation).distance < DIST_TO_DELETE) {
         _chairMarkers.remove(marker);
@@ -126,14 +124,18 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
     if (_imageLoaded) {
       stackChildren.add(Image.file(_imageFile, fit: BoxFit.fitWidth));
+      
+      int pixelOffset = 20;
 
       stackChildren.addAll(_chairMarkers
           .map(
             (Offset offset) => Positioned(
-                  left: offset.dx,
-                  top: offset.dy,
+                  left: offset.dx - pixelOffset,
+                  top: offset.dy - pixelOffset,
                   child: Image.asset(
+                    
                     'assets/chair_icon.png',
+                    alignment: Alignment(-0.5,0.5),
                     width: 40.0,
                     height: 40.0,
                   ),
