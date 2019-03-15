@@ -5,6 +5,8 @@ import 'database.dart';
 import 'package:installer/screen_choose_zone.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:image/image.dart' as imageutil;
+import 'markable_map.dart';
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted
@@ -29,11 +31,14 @@ class CountChairsScreen extends StatefulWidget {
 
 class _CountChairsScreenState extends State<CountChairsScreen> {
   bool _imageLoaded = false;
-  bool shouldShowDialog = true;
+  bool _shouldShowDialog = true;
+
   File _imageFile;
+  Size _imageSize;
 
-  List<Offset> _chairMarkers;
+  MarkableMapController _markableMapController;
 
+  //  Download file from firebase and store locally
   Future<File> downloadFile(String firebasePath) async {
     String fileName = firebasePath.split('/').last;
 
@@ -47,13 +52,19 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
         FirebaseStorage.instance.ref().child(firebasePath);
     final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
 
-    downloadTask.future.then((snapshot) {
+    downloadTask.future.then((snapshot) async {
+      //  Get width and height data from image
+      List<int> imageBytes = await file.readAsBytes();
+      imageutil.Image image = imageutil.decodeJpg(imageBytes);
+      print("width: ${image.width}");
+      _imageSize = Size(image.width.toDouble(), image.height.toDouble());
+
       setState(() {
         _imageFile = file;
         _imageLoaded = true;
-        if (shouldShowDialog) {
+        if (_shouldShowDialog) {
           showInstructionDialog();
-          shouldShowDialog = false;
+          _shouldShowDialog = false;
         }
       });
     });
@@ -63,7 +74,6 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
   void refreshImage() {
     setState(() {
-      _chairMarkers = [];
       _imageLoaded = false;
     });
     downloadFile(widget.firebaseImagePath);
@@ -71,27 +81,21 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
   @override
   void initState() {
-    _chairMarkers = [];
+    _markableMapController = MarkableMapController(
+      maxMarkerSize: 125.0,
+      initialMarkerScale: 1.0,
+        currentWidgetBuilder: (size, position) => Positioned(
+            left: position.dx - size/2.0,
+            top: position.dy- size/2.0,
+            child: Image.asset(
+              'assets/chair_icon.png',
+              width: size,
+              height: size,
+            )));
+
     downloadFile(widget.firebaseImagePath);
+    print(widget.firebaseImagePath);
     super.initState();
-  }
-
-  void addChairMarker(TapUpDetails details) {
-    _chairMarkers.add(details.globalPosition);
-    setState(() {});
-  }
-
-  bool shouldDeleteMarkers(TapUpDetails details) {
-    Offset tapLocation = details.globalPosition;
-
-    for (var marker in _chairMarkers) {
-      if ((marker - tapLocation).distance < DIST_TO_DELETE) {
-        _chairMarkers.remove(marker);
-        setState(() {});
-        return true;
-      }
-    }
-    return false;
   }
 
   void showInstructionDialog() {
@@ -107,7 +111,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
             textAlign: TextAlign.center,
           ),
           content: Text(
-            "Mark all chairs with a tap and then press done",
+            "Pan around the image and mark all chairs ",
             textAlign: TextAlign.center,
           ),
           actions: <Widget>[
@@ -123,52 +127,36 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
     );
   }
 
+  // stackChildren.add(
+  //   Positioned(
+  //     width: MediaQuery.of(context).size.width / 8,
+  //     top: 30.0,
+  //     left: MediaQuery.of(context).size.width / 2.0 -
+  //         MediaQuery.of(context).size.width / 8 / 2.0,
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //           color: Theme.of(context).primaryColor.withAlpha(150),
+  //           borderRadius: BorderRadius.circular(20.0)),
+  //       alignment: Alignment.center,
+  //       height: 30.0,
+  //       child: Text(
+  //         "${_chairMarkers.length}",
+  //         textAlign: TextAlign.center,
+  //         style: TextStyle(
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.white,
+  //             fontSize: 20.0),
+  //       ),
+  //     ),
+  //   ),
+  // );
+
   @override
   Widget build(BuildContext context) {
     List<Widget> stackChildren = [];
 
     if (_imageLoaded) {
       stackChildren.add(Image.file(_imageFile, fit: BoxFit.fitWidth));
-
-      int pixelOffset = 20;
-
-      stackChildren.addAll(_chairMarkers
-          .map(
-            (Offset offset) => Positioned(
-                  left: offset.dx - pixelOffset,
-                  top: offset.dy - pixelOffset,
-                  child: Image.asset(
-                    'assets/chair_icon.png',
-                    alignment: Alignment(-0.5, 0.5),
-                    width: 40.0,
-                    height: 40.0,
-                  ),
-                ),
-          )
-          .toList());
-      stackChildren.add(
-        Positioned(
-          width: MediaQuery.of(context).size.width / 8,
-          top: 30.0,
-          left: MediaQuery.of(context).size.width / 2.0 -
-              MediaQuery.of(context).size.width / 8 / 2.0,
-          child: Container(
-            decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withAlpha(150),
-                borderRadius: BorderRadius.circular(20.0)),
-            alignment: Alignment.center,
-            height: 30.0,
-            child: Text(
-              "${_chairMarkers.length}",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 20.0),
-            ),
-          ),
-        ),
-      );
     }
 
     return Scaffold(
@@ -180,7 +168,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
           style: TextStyle(fontSize: 16.0),
         ),
         onPressed: () {
-          widget.onComplete(_chairMarkers.length);
+          widget.onComplete(4);
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => ChooseZoneScreen(
                   firebaseImagePath: widget.firebaseFloorplanPath,
@@ -203,6 +191,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
             IconButton(
               icon: Icon(Icons.refresh),
               onPressed: () {
+                _markableMapController.reset();
                 refreshImage();
               },
             )
@@ -226,13 +215,12 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
                 ),
               ],
             ))
-          : GestureDetector(
-              onTapUp: (detail) {
-                if (!shouldDeleteMarkers(detail)) {
-                  addChairMarker(detail);
-                }
-              },
-              child: Stack(children: stackChildren),
+          : MarkableMap(
+              editable: true,
+              controller: _markableMapController,
+              screenSize: MediaQuery.of(context).size,
+              imageSize: _imageSize,
+              imageFile: _imageFile,
             ),
     );
   }
