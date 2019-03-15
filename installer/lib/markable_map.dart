@@ -19,6 +19,7 @@ class MarkableMapController {
   // Screen pixel radius within which a touch will lead to marker being deleted
   int deleteRadius;
   double maxMarkerSize;
+  double maxMarkerCount;
   double currentMarkerScale;
   List<Marker> markers;
   Widget Function(double, Offset) currentWidgetBuilder;
@@ -28,8 +29,9 @@ class MarkableMapController {
   MarkableMapController({
     this.currentMarkerScale = 0.25,
     this.deleteRadius = 20,
-    this.maxMarkerSize = 20.0,
+    this.maxMarkerSize = 100.0,
     this.currentWidgetBuilder,
+    this.maxMarkerCount,
   }) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
@@ -102,8 +104,8 @@ class _MarkableMapState extends State<MarkableMap> {
 
     _photoViewController = PhotoViewController();
 
-    _scale = _photoViewController.initial.scale;
-    _imageTranslation = _photoViewController.initial.position;
+    _scale = _photoViewController.initial.scale ?? 0.27;
+    _imageTranslation = _photoViewController.initial.position ?? Offset(0, 0);
 
     //  Set state of this widget to update icons when user scales or translates image
     _photoViewController.outputStateStream.listen((onData) {
@@ -154,14 +156,20 @@ class _MarkableMapState extends State<MarkableMap> {
     Offset positionOnImage = convertToImageCoords(touchPosition);
 
     setState(() {
-      widget.controller.markers
-          .add(Marker(widgetBuilder, positionOnImage, scale));
+      if (widget.controller.maxMarkerCount == null ||
+          widget.controller.markerCount() < widget.controller.maxMarkerCount) {
+        widget.controller.markers
+            .add(Marker(widgetBuilder, positionOnImage, scale));
+      } else {
+        widget.controller.markers.last =
+            Marker(widgetBuilder, positionOnImage, scale);
+      }
     });
   }
 
   Widget _buildMarker(Marker marker) {
     Offset screenCoords = convertToScreenCoords(marker.positionOnImage);
-    double size = widget.controller.maxMarkerSize * marker.scale;
+    double size = _scale * widget.controller.maxMarkerSize * marker.scale;
     print("Size: $size");
     return marker.widgetBuilder(size, screenCoords);
   }
@@ -171,7 +179,7 @@ class _MarkableMapState extends State<MarkableMap> {
       widget.controller.currentMarkerScale = value;
 
       //  Change scale of most recent marker
-      if (widget.controller.markers.isEmpty) {
+      if (widget.controller.markers.isNotEmpty) {
         widget.controller.markers.last.scale =
             widget.controller.currentMarkerScale;
       }
@@ -214,8 +222,26 @@ class _MarkableMapState extends State<MarkableMap> {
   }
 
   void onTap(TapUpDetails details) {
-    addMarker(details.globalPosition, widget.controller.currentWidgetBuilder,
-        widget.controller.currentMarkerScale);
+    if (!shouldDeleteMarkers(details)) {
+      addMarker(details.globalPosition, widget.controller.currentWidgetBuilder,
+          widget.controller.currentMarkerScale);
+    }
+  }
+
+  bool shouldDeleteMarkers(TapUpDetails details) {
+    Offset tapLocation = details.globalPosition;
+
+    for (Marker marker in widget.controller.markers) {
+      Offset markerScreenLocation =
+          convertToScreenCoords(marker.positionOnImage);
+      if ((markerScreenLocation - tapLocation).distance <
+          widget.controller.deleteRadius) {
+        widget.controller.markers.remove(marker);
+        setState(() {});
+        return true;
+      }
+    }
+    return false;
   }
 
   @override

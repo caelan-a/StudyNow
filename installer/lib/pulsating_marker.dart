@@ -19,9 +19,7 @@ class PulsatingMarker extends StatefulWidget {
     this.radius = 150.0,
     this.scale = 1.0,
     @required this.screenPosition,
-  }) : super(key: key) {
-    print("SCALE: $scale");
-  }
+  });
 
   @override
   _PulsatingMarkerState createState() => _PulsatingMarkerState();

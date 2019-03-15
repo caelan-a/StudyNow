@@ -35,6 +35,8 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   @override
   void initState() {
     markableMapController = MarkableMapController(
+        maxMarkerCount: 1,
+        maxMarkerSize: 150.0,
         currentWidgetBuilder: (size, position) => PulsatingMarker(
               screenPosition: position,
               radius: size,
