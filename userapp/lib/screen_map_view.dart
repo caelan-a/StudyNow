@@ -37,7 +37,8 @@ class _MapScreenState extends State<MapScreen> {
       _imageLoaded = false;
     });
 
-    _imageLocalPath = "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
+    _imageLocalPath =
+        "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
     _imageLoaded = true;
 
     //  Firebase path of floor plan image
@@ -186,27 +187,28 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.libraryTitle),
-          centerTitle: true,
-          actions: <Widget>[],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          elevation: 10.0,
-          icon: const Icon(Icons.check),
-          label: const Text(
-            'Done',
-            style: TextStyle(fontSize: 16.0),
-          ),
-          onPressed: () {},
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        // floatingActionButton: FloatingActionButton.extended(
+        //   elevation: 10.0,
+        //   icon: const Icon(Icons.check),
+        //   label: const Text(
+        //     'Done',
+        //     style: TextStyle(fontSize: 16.0),
+        //   ),
+        //   onPressed: () {},
+        // ),
+        // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomAppBar(
           notchMargin: 4.0,
           child: new Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
               Container(
                 padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
                 child: Text(
@@ -219,9 +221,8 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.refresh),
+                icon: Icon(Icons.clear_all),
                 onPressed: () {
-                  refresh();
                 },
               )
             ],
