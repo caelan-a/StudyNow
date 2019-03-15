@@ -5,19 +5,18 @@ import 'dart:math';
   Using photo_view creates a mapo that user can place markers on which move around 
 */
 
-const double BOX_HEIGHT =
-    10.0; // Sets height of icon in widget tree that draws painter. Set low so it doesnt interfere with touch events
+const double BOX_HEIGHT = 10.0; // Sets height of icon in widget tree that draws painter. Set low so it doesnt interfere with touch events
 
 class PulsatingMarker extends StatefulWidget {
   final Offset screenPosition;
   final Color color;
-  final double width;
+  final double radius;
   final double scale;
 
   PulsatingMarker({
     Key key,
     this.color = const Color(0xFF007597),
-    this.width = 150.0,
+    this.radius = 150.0,
     this.scale = 1.0,
     @required this.screenPosition,
   }) : super(key: key);
@@ -57,14 +56,9 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
   Widget build(BuildContext context) {
     return CustomPaint(
       willChange: true,
-      painter: PulsatingPainter(
-          animation: _controller,
-          screenPosition: widget.screenPosition,
-          width: widget.width,
-          baseColor: widget.color,
-          scale: widget.scale),
+      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: widget.scale),
       child: new SizedBox(
-        width: widget.width,
+        width: widget.radius,
         height: BOX_HEIGHT,
       ),
     );
@@ -75,23 +69,18 @@ class PulsatingPainter extends CustomPainter {
   final Offset screenPosition;
 
   final Animation<double> animation;
-  final double width;
+  final double baseRadius;
   final double scale;
   final Color baseColor;
 
-  PulsatingPainter(
-      {@required this.animation,
-      @required this.screenPosition,
-      @required this.width,
-      @required this.scale,
-      @required this.baseColor})
+  PulsatingPainter({@required this.animation, @required this.screenPosition, @required this.baseRadius, @required this.scale, @required this.baseColor})
       : super(repaint: animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
     Color color = baseColor.withOpacity(opacity);
 
-    double radius = scale * width * sqrt(value);
+    double radius = scale * baseRadius *sqrt( value);
 
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(screenPosition, radius, paint);
