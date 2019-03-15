@@ -325,7 +325,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
             ))
           : Container(
               child: PulsatingMarker(
-                  screenPosition: Offset(300.0, 300.0), width: 1000.0, scale: 1.0,),
+                  screenPosition: Offset(300.0, 300.0), width: 50.0, scale: 1.0,),
             ),
     );
     // : GestureDetector(
