@@ -28,7 +28,7 @@ class MarkableMapController {
   MarkableMapController({
     this.currentMarkerScale = 0.25,
     this.deleteRadius = 20,
-    this.maxMarkerSize = 100.0,
+    this.maxMarkerSize = 20.0,
     this.currentWidgetBuilder,
   }) {
     if (currentWidgetBuilder == null) {
@@ -162,7 +162,7 @@ class _MarkableMapState extends State<MarkableMap> {
   Widget _buildMarker(Marker marker) {
     Offset screenCoords = convertToScreenCoords(marker.positionOnImage);
     double size = widget.controller.maxMarkerSize * marker.scale;
-
+    print("Size: $size");
     return marker.widgetBuilder(size, screenCoords);
   }
 

@@ -19,7 +19,9 @@ class PulsatingMarker extends StatefulWidget {
     this.radius = 150.0,
     this.scale = 1.0,
     @required this.screenPosition,
-  }) : super(key: key);
+  }) : super(key: key) {
+    print("SCALE: $scale");
+  }
 
   @override
   _PulsatingMarkerState createState() => _PulsatingMarkerState();
@@ -81,7 +83,6 @@ class PulsatingPainter extends CustomPainter {
     Color color = baseColor.withOpacity(opacity);
 
     double radius = scale * baseRadius *sqrt( value);
-
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(screenPosition, radius, paint);
   }

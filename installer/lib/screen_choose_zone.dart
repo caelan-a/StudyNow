@@ -30,10 +30,16 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
   Size _imageSize;
   File _imageFile;
 
-  MarkableMapController markableMapController = MarkableMapController();
+  MarkableMapController markableMapController;
 
   @override
   void initState() {
+    markableMapController = MarkableMapController(
+        currentWidgetBuilder: (size, position) => PulsatingMarker(
+              screenPosition: position,
+              radius: size,
+            ));
+
     downloadFile(widget.firebaseImagePath);
     super.initState();
   }
@@ -100,7 +106,9 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     );
   }
 
-  void refresh() {}
+  void refresh() {
+    markableMapController.reset();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +174,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
                 imageFile: _imageFile,
                 imageSize: _imageSize,
                 editable: true,
-                sizeableMarkers: false,
+                sizeableMarkers: true,
               ));
   }
 }
