@@ -38,6 +38,8 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
   MarkableMapController _markableMapController;
 
+  int _markerCount = 0;
+
   //  Download file from firebase and store locally
   Future<File> downloadFile(String firebasePath) async {
     String fileName = firebasePath.split('/').last;
@@ -74,6 +76,7 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
   void refreshImage() {
     setState(() {
+      _markerCount = 0;
       _imageLoaded = false;
     });
     downloadFile(widget.firebaseImagePath);
@@ -82,11 +85,11 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
   @override
   void initState() {
     _markableMapController = MarkableMapController(
-      maxMarkerSize: 125.0,
-      initialMarkerScale: 1.0,
+        maxMarkerSize: 50.0,
+        initialMarkerScale: 1.0,
         currentWidgetBuilder: (size, position) => Positioned(
-            left: position.dx - size/2.0,
-            top: position.dy- size/2.0,
+            left: position.dx - size / 2.0,
+            top: position.dy - size / 2.0,
             child: Image.asset(
               'assets/chair_icon.png',
               width: size,
@@ -127,101 +130,97 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
     );
   }
 
-  // stackChildren.add(
-  //   Positioned(
-  //     width: MediaQuery.of(context).size.width / 8,
-  //     top: 30.0,
-  //     left: MediaQuery.of(context).size.width / 2.0 -
-  //         MediaQuery.of(context).size.width / 8 / 2.0,
-  //     child: Container(
-  //       decoration: BoxDecoration(
-  //           color: Theme.of(context).primaryColor.withAlpha(150),
-  //           borderRadius: BorderRadius.circular(20.0)),
-  //       alignment: Alignment.center,
-  //       height: 30.0,
-  //       child: Text(
-  //         "${_chairMarkers.length}",
-  //         textAlign: TextAlign.center,
-  //         style: TextStyle(
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.white,
-  //             fontSize: 20.0),
-  //       ),
-  //     ),
-  //   ),
-  // );
+  Widget _buildCountWidget() {
+    return Positioned(
+      width: MediaQuery.of(context).size.width / 8,
+      top: 30.0,
+      left: MediaQuery.of(context).size.width / 2.0 -
+          MediaQuery.of(context).size.width / 8 / 2.0,
+      child: Container(
+        decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withAlpha(150),
+            borderRadius: BorderRadius.circular(20.0)),
+        alignment: Alignment.center,
+        height: 30.0,
+        child: Text(
+          "${_markerCount}",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> stackChildren = [];
-
-    if (_imageLoaded) {
-      stackChildren.add(Image.file(_imageFile, fit: BoxFit.fitWidth));
-    }
-
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        elevation: 10.0,
-        icon: const Icon(Icons.arrow_forward),
-        label: const Text(
-          'Next',
-          style: TextStyle(fontSize: 16.0),
+        floatingActionButton: FloatingActionButton.extended(
+          elevation: 10.0,
+          icon: const Icon(Icons.arrow_forward),
+          label: const Text(
+            'Next',
+            style: TextStyle(fontSize: 16.0),
+          ),
+          onPressed: () {
+            widget.onComplete(_markableMapController.markerCount());
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => ChooseZoneScreen(
+                    firebaseImagePath: widget.firebaseFloorplanPath,
+                    onComplete: widget.onChooseZoneComplete)));
+          },
         ),
-        onPressed: () {
-          widget.onComplete(4);
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ChooseZoneScreen(
-                  firebaseImagePath: widget.firebaseFloorplanPath,
-                  onComplete: widget.onChooseZoneComplete)));
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        notchMargin: 4.0,
-        child: new Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                _markableMapController.reset();
-                refreshImage();
-              },
-            )
-          ],
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          notchMargin: 4.0,
+          child: new Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: () {
+                  _markableMapController.reset();
+                  refreshImage();
+                },
+              )
+            ],
+          ),
         ),
-      ),
-      body: !_imageLoaded
-          ? Center(
-              child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  "Fetching image from camera\n\n",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 16.0),
+        body: !_imageLoaded
+            ? Center(
+                child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    "Fetching image from camera\n\n",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[500], fontSize: 16.0),
+                  ),
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).primaryColor),
+                  ),
+                ],
+              ))
+            : Stack(children: <Widget>[
+                MarkableMap(
+                  onMarkersChanged: (markerCount) =>
+                      setState(() => _markerCount = markerCount),
+                  editable: true,
+                  controller: _markableMapController,
+                  screenSize: MediaQuery.of(context).size,
+                  imageSize: _imageSize,
+                  imageFile: _imageFile,
                 ),
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor),
-                ),
-              ],
-            ))
-          : MarkableMap(
-              editable: true,
-              controller: _markableMapController,
-              screenSize: MediaQuery.of(context).size,
-              imageSize: _imageSize,
-              imageFile: _imageFile,
-            ),
-    );
+                _buildCountWidget(),
+              ]));
   }
 }

@@ -37,6 +37,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
     markableMapController = MarkableMapController(
         maxMarkerCount: 1,
         maxMarkerSize: 150.0,
+        initialMapScale: 0.27,
         currentWidgetBuilder: (size, position) => PulsatingMarker(
               screenPosition: position,
               radius: size,
@@ -123,12 +124,12 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
             style: TextStyle(fontSize: 16.0),
           ),
           onPressed: () {
-            // if (zoneMarkers.length < 1) {
-            //   //  No marker placed
-            //   showInstructionDialog();
-            // } else {
-            //   widget.onComplete(_sizeSliderValue, zoneMarkers[0]);
-            // }
+            if (markableMapController.markerCount() < 1) {
+              //  No marker placed
+              showInstructionDialog();
+            } else {
+              widget.onComplete(markableMapController.markers.last.scale, markableMapController.markers.last.positionOnImage);
+            }
           },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

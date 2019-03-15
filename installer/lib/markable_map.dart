@@ -71,6 +71,8 @@ class MarkableMap extends StatefulWidget {
   final Size imageSize;
   final Size screenSize;
 
+  final Function(int markerCount) onMarkersChanged;
+
   MarkableMapController controller;
 
   MarkableMap(
@@ -81,7 +83,8 @@ class MarkableMap extends StatefulWidget {
       this.controller,
       this.sizeableMarkers = false,
       this.editable = false,
-      this.appBarHeight = 0.0})
+      this.appBarHeight = 0.0,
+      this.onMarkersChanged})
       : super(key: key) {
     if (controller == null) {
       controller = MarkableMapController();
@@ -233,6 +236,10 @@ class _MarkableMapState extends State<MarkableMap> {
       addMarker(details.globalPosition, widget.controller.currentWidgetBuilder,
           widget.controller.currentMarkerScale);
     }
+    //  Run callback if
+    if (widget.onMarkersChanged != null) {
+      widget.onMarkersChanged(widget.controller.markerCount());
+    }
   }
 
   bool shouldDeleteMarkers(TapUpDetails details) {
@@ -259,8 +266,8 @@ class _MarkableMapState extends State<MarkableMap> {
       controller: _photoViewController,
       backgroundDecoration: BoxDecoration(color: Colors.white),
       imageProvider: FileImage(widget.imageFile),
-      minScale: PhotoViewComputedScale.contained * 0.8,
-      maxScale: 4.0,
+      minScale: PhotoViewComputedScale.covered * 0.8,
+      maxScale: 8.0,
       initialScale: widget.controller.initialMapScale,
     );
 
