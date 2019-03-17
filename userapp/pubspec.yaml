@@ -31,6 +31,7 @@ dev_dependencies:
   cloud_firestore: ^0.9.5+2
   photo_view:
   image:
+  percent_indicator: ^1.0.14
 
 
 # For information on the generic Dart part of this file, see the
