@@ -5,13 +5,15 @@ import 'dart:io';
 import 'package:image/image.dart' as imageutil;
 import 'pulsating_marker.dart';
 import 'markable_map.dart';
+import 'bouncing_icon.dart';
 
-/*
-TO IMPLEMENT
-1. Animating marker to shrink, move then appear at next point and expand
-2. Add slider in to set size of marker
-3. Fix going back and nested navigation
-*/
+// /*
+// TO IMPLEMENT
+// 1. Animating marker to shrink, move then appear at next point and expand
+// 2. Add slider in to set size of marker
+// 3. Fix going back and nested navigation
+// */
+
 
 class ChooseZoneScreen extends StatefulWidget {
   final String firebaseImagePath;
@@ -41,6 +43,7 @@ class _ChooseZoneScreenState extends State<ChooseZoneScreen> {
               screenPosition: position,
               radius: size,
             ));
+        // currentWidgetBuilder:(size, position) => DropPin(size, position));
 
     downloadFile(widget.firebaseImagePath);
     super.initState();

@@ -53,6 +53,7 @@ class MarkableMapController {
     state.setState(() {
       currentMarkerScale = 0.25;
       markers = [];
+      // currentWidgetBuilder.dispose();
     });
   }
 }
