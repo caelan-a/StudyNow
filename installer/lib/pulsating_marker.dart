@@ -29,7 +29,7 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
     with TickerProviderStateMixin {
   AnimationController _controller;
   AnimationController _dropController;
-  var dropTheBass;
+  var drop_pin_tween;
 
   @override
   void initState() {
@@ -42,7 +42,7 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
       duration: Duration(milliseconds: 1000),
     );
 
-    dropTheBass = Tween<double>(
+    drop_pin_tween = Tween<double>(
       begin:0,
       end:1.5,
     ).animate(CurvedAnimation(
@@ -90,7 +90,7 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
 
     return CustomPaint(
       willChange: true,
-      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: dropTheBass.value), // controler.value*scale || widget.scale
+      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: drop_pin_tween.value), // controler.value*scale || widget.scale
       child: new SizedBox(
         width: widget.radius,
         height: BOX_HEIGHT,
