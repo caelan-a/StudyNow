@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:image/image.dart' as imageutil;
 import 'pulsating_marker.dart';
 import 'markable_map.dart';
-import 'bouncing_icon.dart';
+// import 'bouncing_icon.dart';
 
 // /*
 // TO IMPLEMENT
