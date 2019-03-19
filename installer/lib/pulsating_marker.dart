@@ -114,7 +114,7 @@ class PulsatingPainter extends CustomPainter {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
     Color color = baseColor.withOpacity(opacity);
 
-    double radius = scale * baseRadius *sqrt( value);
+    double radius = scale * baseRadius *sqrt(value);
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(screenPosition, radius, paint);
   }

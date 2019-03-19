@@ -20,18 +20,22 @@ class MarkableMapController {
   int deleteRadius;
   double maxMarkerSize;
   double maxMarkerCount;
+  double initialMarkerScale;
   double currentMarkerScale;
   List<Marker> markers;
   Widget Function(double, Offset) currentWidgetBuilder;
 
   State<MarkableMap> state;
 
+  double initialMapScale;
+
   MarkableMapController({
-    this.currentMarkerScale = 0.25,
+    this.initialMarkerScale = 0.25,
     this.deleteRadius = 20,
     this.maxMarkerSize = 100.0,
     this.currentWidgetBuilder,
     this.maxMarkerCount,
+    this.initialMapScale = 1.0,
   }) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
@@ -42,6 +46,7 @@ class MarkableMapController {
             child: Icon(Icons.crop_square),
           );
     }
+    currentMarkerScale = initialMarkerScale;
     markers = [];
   }
 
@@ -51,7 +56,7 @@ class MarkableMapController {
 
   void reset() {
     state.setState(() {
-      currentMarkerScale = 0.25;
+      currentMarkerScale = initialMarkerScale;
       markers = [];
       // currentWidgetBuilder.dispose();
     });
@@ -67,6 +72,8 @@ class MarkableMap extends StatefulWidget {
   final Size imageSize;
   final Size screenSize;
 
+  final Function(int markerCount) onMarkersChanged;
+
   MarkableMapController controller;
 
   MarkableMap(
@@ -77,7 +84,8 @@ class MarkableMap extends StatefulWidget {
       this.controller,
       this.sizeableMarkers = false,
       this.editable = false,
-      this.appBarHeight = 0.0})
+      this.appBarHeight = 0.0,
+      this.onMarkersChanged})
       : super(key: key) {
     if (controller == null) {
       controller = MarkableMapController();
@@ -105,7 +113,7 @@ class _MarkableMapState extends State<MarkableMap> {
 
     _photoViewController = PhotoViewController();
 
-    _scale = _photoViewController.initial.scale ?? 0.27;
+    _scale = widget.controller.initialMapScale;
     _imageTranslation = _photoViewController.initial.position ?? Offset(0, 0);
 
     //  Set state of this widget to update icons when user scales or translates image
@@ -172,6 +180,8 @@ class _MarkableMapState extends State<MarkableMap> {
     Offset screenCoords = convertToScreenCoords(marker.positionOnImage);
     double size = _scale * widget.controller.maxMarkerSize * marker.scale;
     print("Size: $size");
+    print("Screen Position: $screenCoords");
+    // print(": $size");
     return marker.widgetBuilder(size, screenCoords);
   }
 
@@ -227,6 +237,10 @@ class _MarkableMapState extends State<MarkableMap> {
       addMarker(details.globalPosition, widget.controller.currentWidgetBuilder,
           widget.controller.currentMarkerScale);
     }
+    //  Run callback if
+    if (widget.onMarkersChanged != null) {
+      widget.onMarkersChanged(widget.controller.markerCount());
+    }
   }
 
   bool shouldDeleteMarkers(TapUpDetails details) {
@@ -253,8 +267,9 @@ class _MarkableMapState extends State<MarkableMap> {
       controller: _photoViewController,
       backgroundDecoration: BoxDecoration(color: Colors.white),
       imageProvider: FileImage(widget.imageFile),
-      minScale: PhotoViewComputedScale.contained * 0.8,
-      maxScale: 4.0,
+      minScale: PhotoViewComputedScale.covered * 0.8,
+      maxScale: 8.0,
+      initialScale: widget.controller.initialMapScale,
     );
 
     List<Widget> markerWidgets = widget.controller.markers

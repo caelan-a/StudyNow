@@ -39,13 +39,13 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
     _numChairsPresent = count;
   }
 
-  void setMarkerInfo(double size, Offset location) {
-    _markerSize = size;
+  void setMarkerInfo(double scale, Offset location) {
+    _markerSize = scale;
     _markerLocation = location;
   }
 
-  void onChooseZoneComplete(double size, Offset location) {
-    setMarkerInfo(size, location);
+  void onChooseZoneComplete(double scale, Offset location) {
+    setMarkerInfo(scale, location);
     submitInfo();
   }
 
