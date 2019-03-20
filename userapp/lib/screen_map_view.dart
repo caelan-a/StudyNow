@@ -7,6 +7,24 @@ import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 
+
+List<Level> floors = <Level>[
+  Level("baileuu_1", AssetImage("assets/floorplans/baileuu_1.png")),
+  Level("baileuu_2", AssetImage("assets/floorplans/baileuu_2.png")),
+];
+
+class Level{
+  var name;
+  var floorPlan;
+
+  Level(this.name, this.floorPlan);
+
+  void setFloorplan(var plan){
+    floorPlan = plan;
+  }
+}
+
+
 class MapScreen extends StatefulWidget {
   final String library;
   final String libraryTitle;
@@ -26,6 +44,9 @@ class _MapScreenState extends State<MapScreen> {
   int imageHeight;
   bool _imageLoaded = false;
 
+
+  var _selectedLevel;
+
   PhotoViewController _photoViewController;
 
   List<Offset> zoneMarkers = [];
@@ -40,6 +61,7 @@ class _MapScreenState extends State<MapScreen> {
     _imageLocalPath =
         "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
     _imageLoaded = true;
+    print("file location in $_imageLocalPath");
 
     //  Firebase path of floor plan image
     // String firebaseImagePath = "/libraries/" +
@@ -52,48 +74,52 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   //  Download file from firebase and store locally
-  Future<File> downloadFile(String firebasePath) async {
-    String fileName = firebasePath.split('/').last;
+  // Future<File> downloadFile(String firebasePath) async {
+  //   String fileName = firebasePath.split('/').last;
 
-    print("Downloading image: $fileName from FirebaseStorage..");
-    Directory tempDir = Directory.systemTemp;
-    final File file = File('${tempDir.path}/$fileName');
+  //   print("Downloading image: $fileName from FirebaseStorage..");
+  //   Directory tempDir = Directory.systemTemp;
+  //   final File file = File('${tempDir.path}/$fileName');
 
-    print(fileName);
+  //   print(fileName);
 
-    final StorageReference ref =
-        FirebaseStorage.instance.ref().child(firebasePath);
-    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+  //   final StorageReference ref =
+  //       FirebaseStorage.instance.ref().child(firebasePath);
+  //   final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
 
-    downloadTask.future.then((snapshot) async {
-      //  Get width and height data from image
-      List<int> imageBytes = await file.readAsBytes();
-      imageutil.Image image = imageutil.decodePng(imageBytes);
-      imageWidth = image.width;
-      imageHeight = image.height;
-      // print("w: $imageWidth, h: $imageHeight");
+  //   downloadTask.future.then((snapshot) async {
+  //     //  Get width and height data from image
+  //     List<int> imageBytes = await file.readAsBytes();
+  //     imageutil.Image image = imageutil.decodePng(imageBytes);
+  //     imageWidth = image.width;
+  //     imageHeight = image.height;
+  //     // print("w: $imageWidth, h: $imageHeight");
 
-      setState(() {
-        _imageFile = file;
-        _imageLoaded = true;
-      });
-    });
+  //     setState(() {
+  //       _imageFile = file;
+  //       _imageLoaded = true;
+  //     });
+  //   });
 
-    return file;
-  }
+  //   return file;
+  // }
 
   @override
   void initState() {
+    // print("entered the map_view1");
     _photoViewController = PhotoViewController();
+    // print("entered the map_view2");
 
     //  Set state of this widget to update icons when user scales or translates image
     _photoViewController.outputStateStream.listen((onData) {
+      // print("entered the map_view3");
       setState(() {
         print("Set state");
       });
     });
-
+    _selectedLevel = floors[0];
     showFloor("1");
+    // print("done initstate");
 
     super.initState();
   }
@@ -168,16 +194,24 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  void _select(Level imAndNm){
+    setState(() {
+     _selectedLevel = imAndNm; 
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     //  Populate stack to allow overlaying of location icons
     List<Widget> stackChildren = [];
     if (_imageLoaded) {
+      // print("we're actually building");
       stackChildren.add(new Container(
           child: new PhotoView(
         controller: _photoViewController,
         backgroundDecoration: BoxDecoration(color: Colors.white),
-        imageProvider: AssetImage("baileuu_1.png"),
+        // imageProvider: AssetImage("assets/floorplans/baileuu_1.png"),
+        imageProvider: _selectedLevel.floorPlan,
         minScale: PhotoViewComputedScale.contained * 0.8,
         maxScale: 4.0,
       )));
@@ -220,11 +254,28 @@ class _MapScreenState extends State<MapScreen> {
                       fontSize: 20.0),
                 ),
               ),
-              IconButton(
+              // IconButton(
+              //   icon: Icon(Icons.clear_all),
+              //   onPressed: () {
+              //     print("clearing all");
+              //   },
+              PopupMenuButton<Level>(
                 icon: Icon(Icons.clear_all),
-                onPressed: () {
+                elevation:3.2,
+                initialValue: _selectedLevel,
+                onCanceled: () => print("tapped out"),
+                onSelected: _select,
+                itemBuilder: (BuildContext context){
+                  return floors.map((Level imAndNm){
+                    return new PopupMenuItem<Level>(
+                      value: imAndNm,
+                      child: Text(imAndNm.name),
+                    );
+                  }
+                  ).toList();
                 },
-              )
+              ),
+              
             ],
           ),
         ),
@@ -251,3 +302,4 @@ class _MapScreenState extends State<MapScreen> {
               ));
   }
 }
+

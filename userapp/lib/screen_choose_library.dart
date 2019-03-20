@@ -33,7 +33,10 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
         onWillPop: () async => true,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Libraries'),
+            title: const Text(
+              'Libraries',
+              style: TextStyle(fontFamily: 'Pridi'),
+            ),
             centerTitle: true,
             actions: <Widget>[],
           ),
