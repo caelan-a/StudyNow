@@ -43,8 +43,9 @@ flutter:
   - assets/floorplans/
   - assets/floorplans//baileuu_1.png
   - assets/floorplans/baileuu_1.png
-  - assets/floorplans//baileuu_2.png
-  - assets/floorplans/baileuu_2.png
+  # not required no more
+  # - assets/floorplans//baileuu_2.png
+  # - assets/floorplans/baileuu_2.png
 
     
   # The following line ensures that the Material Icons font is

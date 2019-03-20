@@ -8,19 +8,41 @@ import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 
 
-List<Level> floors = <Level>[
-  Level("baileuu_1", AssetImage("assets/floorplans/baileuu_1.png")),
-  Level("baileuu_2", AssetImage("assets/floorplans/baileuu_2.png")),
-];
+// List<Level> floors = <Level>[
+//   // Level("baileuu_1", AssetImage("assets/floorplans/baileuu_1.png")),
+//   // Level(name:"baileuu_2", floorPlan: AssetImage("assets/floorplans/baileuu_2.png")),
+//   Level(name:"level 0"),
+//   Level(name:"level 1"),
+//   Level(name:"level 2"),
+// ];
 
+// Level object stores the photo's name (e.g. baileuu_1.png) and photo for use in hamburger
 class Level{
-  var name;
+  String name;
+  int level;
   var floorPlan;
 
-  Level(this.name, this.floorPlan);
+  Level({@required this.name, this.level, this.floorPlan}){
+    // level = name.split(" ")[1];
+    print("we made one:");
+    print(toString());
+  }
 
   void setFloorplan(var plan){
-    floorPlan = plan;
+    // print("the floorplan = $floorPlan");
+    if (floorPlan == null){
+      floorPlan = plan;
+    }
+    // print("the floorplan = $floorPlan");
+    // print("**********");
+  }
+
+  String toString(){
+    return "The level object is named $name, with level $level and the floorplan $floorPlan";
+  }
+
+  String getLevel(){
+    return level.toString();
   }
 }
 
@@ -28,87 +50,96 @@ class Level{
 class MapScreen extends StatefulWidget {
   final String library;
   final String libraryTitle;
+  var floorInfo;
 
-  MapScreen({@required this.library, this.libraryTitle = "Library"});
+  MapScreen({@required this.library, this.libraryTitle = "Library", this.floorInfo});
 
   @override
   _MapScreenState createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
-  String _currentFloor;
-
-  File _imageFile;
-  String _imageLocalPath;
+  // File _imageFile;
+  // String _imageLocalPath;
   int imageWidth;
   int imageHeight;
   bool _imageLoaded = false;
 
 
+  List<Level> floors;
+  Level lvl;
+
   var _selectedLevel;
+  var numLevels;
 
   PhotoViewController _photoViewController;
 
   List<Offset> zoneMarkers = [];
 
-  void showFloor(String floorID) {
-    _currentFloor = floorID;
+  void updateFromFirebase(String floorID) {
 
     setState(() {
       _imageLoaded = false;
     });
 
-    _imageLocalPath =
-        "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
-    _imageLoaded = true;
-    print("file location in $_imageLocalPath");
+    // _imageLocalPath =
+    //     "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
+    // print("file location in $_imageLocalPath");
+    // _imageLoaded = true;
 
     //  Firebase path of floor plan image
-    // String firebaseImagePath = "/libraries/" +
-    //     widget.library +
-    //     "/floors/" +
-    //     floorID +
-    //     "/floor_plan.png";
+    String firebaseImagePath = "/libraries/" +
+        widget.library +
+        "/floors/" +
+        _selectedLevel.level.toString() +
+        "/floor_plan.png";
 
-    // downloadFile(firebaseImagePath);
+    downloadFile(firebaseImagePath);
   }
 
   //  Download file from firebase and store locally
-  // Future<File> downloadFile(String firebasePath) async {
-  //   String fileName = firebasePath.split('/').last;
+  Future<File> downloadFile(String firebasePath) async {
+    String fileName = firebasePath.split('/').last;
+    var floor = int.parse(firebasePath.split('/')[4]);
 
-  //   print("Downloading image: $fileName from FirebaseStorage..");
-  //   Directory tempDir = Directory.systemTemp;
-  //   final File file = File('${tempDir.path}/$fileName');
 
-  //   print(fileName);
+    print("looking for the firebase info $firebasePath on floor $floor");
+    // print("Downloading image: $fileName from FirebaseStorage..");
+    Directory tempDir = Directory.systemTemp;
+    final File file = File('${tempDir.path}/'+ widget.library + floor.toString() + '$fileName');
 
-  //   final StorageReference ref =
-  //       FirebaseStorage.instance.ref().child(firebasePath);
-  //   final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+    // print(fileName);
 
-  //   downloadTask.future.then((snapshot) async {
-  //     //  Get width and height data from image
-  //     List<int> imageBytes = await file.readAsBytes();
-  //     imageutil.Image image = imageutil.decodePng(imageBytes);
-  //     imageWidth = image.width;
-  //     imageHeight = image.height;
-  //     // print("w: $imageWidth, h: $imageHeight");
+    final StorageReference ref =
+        FirebaseStorage.instance.ref().child(firebasePath);
+    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
 
-  //     setState(() {
-  //       _imageFile = file;
-  //       _imageLoaded = true;
-  //     });
-  //   });
+    
+    downloadTask.future.then((snapshot) async {
+      //  Get width and height data from image
+      List<int> imageBytes = await file.readAsBytes();
+      imageutil.Image image = imageutil.decodePng(imageBytes);
+      imageWidth = image.width;
+      imageHeight = image.height;
+      // print("w: $imageWidth, h: $imageHeight");
 
-  //   return file;
-  // }
+      // floors[floor].setFloorplan(FileImage(file));
+      _selectedLevel.setFloorplan(FileImage(file));
+      print(floors[floor].name);
+      
+      setState(() {
+        // _imageFile = file;
+        _imageLoaded = true;
+      });
+    });
+
+    return file;
+  }
+
 
   @override
   void initState() {
-    // print("entered the map_view1");
     _photoViewController = PhotoViewController();
-    // print("entered the map_view2");
 
     //  Set state of this widget to update icons when user scales or translates image
     _photoViewController.outputStateStream.listen((onData) {
@@ -117,12 +148,43 @@ class _MapScreenState extends State<MapScreen> {
         print("Set state");
       });
     });
-    _selectedLevel = floors[0];
-    showFloor("1");
-    // print("done initstate");
+    numLevels = widget.floorInfo.length;
+    // Make a list of level objects based on the number of lvls in a lib
+    floors = <Level>[];
+    makeLvlList();
+    // var thelvl = Level(name: widget.floorInfo[0], level: 0);
+    // floors.add(thelvl);
+
+    // Start at level 1 - select the first level then load the data
+    _selectedLevel = floors[1]; 
+
+    print("we done nigs");
+    
+    updateFromFirebase("1");
+
+    print("done initstate");
 
     super.initState();
   }
+
+  void makeLvlList(){
+    // the first index 
+    for(int i=0; i < numLevels; i++){
+      // print("i= $i");
+      var lvl = Level(name: widget.floorInfo[i], level: i);
+      // print("____----_____");
+      // print(lvl.toString());
+      // floors.insert(i, lvl);
+      floors.add(lvl);
+      // print(floors[i].toString());
+    }
+
+    // print("fuill list:");
+    // Set<Level> set = Set.from(floors);
+    // set.forEach((element) => print(element));
+
+  }
+
 
   //  Uses values from PhotoViewController to translate coordinates of screen touch to an offset in image space
   //  This offset describes the percentage of the way from the center to the right side of the image in the x
@@ -195,9 +257,20 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _select(Level imAndNm){
-    setState(() {
-     _selectedLevel = imAndNm; 
-    });
+
+    _selectedLevel = imAndNm;
+    if(_selectedLevel.floorPlan == null){
+      updateFromFirebase(_selectedLevel.getLevel());
+    }
+    else{
+      setState(() {
+          _imageLoaded = true;
+      });
+    }
+
+    Set<Level> set = Set.from(floors);
+    set.forEach((element) => print(element));
+    // setState(){};
   }
 
   @override
@@ -206,6 +279,7 @@ class _MapScreenState extends State<MapScreen> {
     List<Widget> stackChildren = [];
     if (_imageLoaded) {
       // print("we're actually building");
+      // print("the selectedLevel = $_selectedLevel");
       stackChildren.add(new Container(
           child: new PhotoView(
         controller: _photoViewController,
@@ -261,9 +335,13 @@ class _MapScreenState extends State<MapScreen> {
               //   },
               PopupMenuButton<Level>(
                 icon: Icon(Icons.clear_all),
-                elevation:3.2,
+                // elevation:1500,
+              
+                //offset measured from the selected object so change this everytime
+                offset: Offset(0.0,-1.0*(20 + 95*(numLevels-floors.indexOf(_selectedLevel)))),
+          
                 initialValue: _selectedLevel,
-                onCanceled: () => print("tapped out"),
+                onCanceled: () => print("tapped outside the menu"),
                 onSelected: _select,
                 itemBuilder: (BuildContext context){
                   return floors.map((Level imAndNm){

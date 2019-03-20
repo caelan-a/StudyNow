@@ -35,7 +35,7 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
           appBar: AppBar(
             title: const Text(
               'Libraries',
-              style: TextStyle(fontFamily: 'Pridi'),
+              // style: TextStyle(fontFamily: 'Pridi'),
             ),
             centerTitle: true,
             actions: <Widget>[],
@@ -102,6 +102,7 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                                 builder: (context) => MapScreen(
                                       library: _chosenLibrary,
                                       libraryTitle: document['title'],
+                                      floorInfo: document['floorInfo'],
                                     ),
                               ),
                             );
