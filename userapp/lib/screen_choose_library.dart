@@ -36,7 +36,7 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
             backgroundColor: Theme.of(context).canvasColor,
             title: const Text(
               'Libraries',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey, fontSize: 24.0),
             ),
             centerTitle: true,
             leading: IconButton(
@@ -54,59 +54,78 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
         ));
   }
 
-  Widget _buildPercentageWidget(int totalSeats, int totalPeople) {
-    int percentageFull = (100*(totalPeople / totalSeats)).toInt();
+  Widget _buildPercentageWidget(int totalSeats, int totalPeople, int offsetFactor) {
+    const int offsetMagnitude = 75;
+    int percentageFull = (100 * (totalPeople / totalSeats)).toInt();
     Color color = percentageFull < 25
         ? Colors.green
         : percentageFull < 50
             ? Colors.yellow
             : percentageFull < 75 ? Colors.orange : Colors.red;
+    // Color color = Theme.of(context).primaryColor;
 
-    return CircularPercentIndicator(
-      radius: 60.0,
-      lineWidth: 5.0,
-      percent: percentageFull / 100.0,
-      center: new Text("$percentageFull%"),
-      progressColor: color,
-    );
+    return Stack(children: <Widget>[
+      CircularPercentIndicator(
+        animation: true,
+        animationDuration: 400 + offsetFactor * offsetMagnitude,
+        startAngle: 270.0,
+        animateFromLastPercent: true,
+        circularStrokeCap: CircularStrokeCap.round,
+        radius: 70.0,
+        lineWidth: 6.0,
+        percent: percentageFull / 100.0,
+        center: new Text(
+          "$percentageFull%",
+          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal),
+        ),
+        progressColor: color,
+      )
+    ]);
   }
 
   Widget _buildLibraryTile(
-      String libraryTitle, String libraryID, int totalSeats, int totalPeople) {
-    return Card(
-      child: ListTile(
-        leading: _buildPercentageWidget(totalSeats, totalPeople),
-        title: Text(
-          libraryTitle,
-          style: TextStyle(
-              fontWeight: FontWeight.normal,
-              fontSize: 36.0,
-              color: Colors.grey[600]),
-        ),
-        subtitle: Text("$totalSeats seats",
+      String libraryTitle, String libraryID, int totalSeats, int totalPeople, int tileIndex) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+      child: Card(
+        // margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
+        elevation: 3.0,
+        child: ListTile(
+          contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+          leading: _buildPercentageWidget(totalSeats, totalPeople, tileIndex),
+          title: Text(
+            libraryTitle,
             style: TextStyle(
                 fontWeight: FontWeight.normal,
-                fontSize: 16.0,
-                color: Colors.grey[600])),
-        trailing: Icon(Icons.arrow_forward_ios),
-        onTap: () {
-          //  Store selection info
-          _chosenLibrary = libraryID;
+                fontSize: 36.0,
+                color: Colors.grey[600]),
+          ),
+          subtitle: Text("$totalSeats seats",
+              style: TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 16.0,
+                  color: Colors.grey[600])),
+          trailing: Icon(Icons.arrow_forward_ios),
+          onTap: () {
+            //  Store selection info
+            _chosenLibrary = libraryID;
 
-          Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(
-              builder: (context) => MapScreen(
-                    library: _chosenLibrary,
-                    libraryTitle: libraryTitle,
-                  ),
-            ),
-          );
-        },
+            Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(
+                builder: (context) => MapScreen(
+                      library: _chosenLibrary,
+                      libraryTitle: libraryTitle,
+                    ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildFirebaseList(collectionPath) {
+    int tileCount = 0;
     return WillPopScope(
         onWillPop: () async {
           print("pop");
@@ -139,10 +158,14 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
-                        _buildLibraryTile("Baileuu", "baileuu", 400, 225),
-                        _buildLibraryTile("Arts", "baileuu", 400, 370),
-                        _buildLibraryTile("Brownless", "baileuu", 400, 170),
-                        _buildLibraryTile("ERC", "baileuu", 400, 90),
+                        _buildLibraryTile(
+                            document['title'], document.documentID, 400, 85, 0),
+                        _buildLibraryTile(
+                            "Giblin", document.documentID, 300, 100, 1),
+                        _buildLibraryTile(
+                            "Brownless", document.documentID, 220, 120, 2),
+                        _buildLibraryTile(
+                            "Arts", document.documentID, 557, 500, 3),
                       ],
                     );
                   }).toList(),

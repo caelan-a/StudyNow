@@ -43,6 +43,11 @@ flutter:
   - assets/studynow.png
   - assets/floorplans/
   - assets/floorplans//baileuu_1.png
+  - assets/floorplans/baileuu_1.png
+  # not required no more
+  # - assets/floorplans//baileuu_2.png
+  # - assets/floorplans/baileuu_2.png
+
     
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -65,12 +70,23 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+  fonts:
+    - family: Pridi
+      fonts:
+        - asset: assets/fonts/Pridi/Pridi-Regular.ttf
+          style: normal
+        - asset: assets/fonts/Pridi/Pridi-Light.ttf
+          style: normal
+        - asset: assets/fonts/Pridi/Pridi-Bold.ttf
+          style: normal
+        - asset: assets/fonts/Pridi/Pridi-ExtraLight.ttf
+          style: normal
+        - asset: assets/fonts/Pridi/Pridi-Medium.ttf
+          style: normal
+        - asset: assets/fonts/Pridi/Pridi-SemiBold.ttf
+          style: normal
+       
+          
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

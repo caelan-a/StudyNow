@@ -23,6 +23,7 @@ class Main extends StatelessWidget {
       title: 'Flutter Demo',
       navigatorKey: _rootNavKey,
       theme: ThemeData(
+        // fontFamily: 'Pridi',
         primarySwatch: Colors.blue,
         pageTransitionsTheme: PageTransitionsTheme(builders: {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
