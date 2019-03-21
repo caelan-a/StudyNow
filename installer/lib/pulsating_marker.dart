@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 /*
-  Using photo_view creates a mapo that user can place markers on which move around 
+  Using photo_view creates a map that user can place markers on which move around 
 */
 
 const double BOX_HEIGHT = 10.0; // Sets height of icon in widget tree that draws painter. Set low so it doesnt interfere with touch events
@@ -26,37 +26,71 @@ class PulsatingMarker extends StatefulWidget {
 }
 
 class _PulsatingMarkerState extends State<PulsatingMarker>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   AnimationController _controller;
+  AnimationController _dropController;
+  var drop_pin_tween;
 
   @override
   void initState() {
     _controller = new AnimationController(
       vsync: this,
     );
+
+    _dropController = new AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
+    );
+
+    drop_pin_tween = Tween<double>(
+      begin:0,
+      end:1.5,
+    ).animate(CurvedAnimation(
+        parent:_dropController,
+        curve: Curves.bounceOut,
+    ))
+    ..addListener((){
+      setState(() {
+        
+      });
+    });
+
     _startAnimation();
     super.initState();
   }
 
+
   @override
   void dispose() {
     _controller.dispose();
+    _dropController.dispose();
     super.dispose();
   }
 
   void _startAnimation() {
+    print("good boys");
     _controller.stop();
     _controller.reset();
+
+
+    _dropController.stop();
+    _dropController.reset();
+    _dropController.forward();
+
+
     _controller.repeat(
       period: Duration(seconds: 1),
     );
+
   }
 
   @override
   Widget build(BuildContext context) {
+
+
     return CustomPaint(
       willChange: true,
-      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: widget.scale),
+      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: drop_pin_tween.value), // controler.value*scale || widget.scale
       child: new SizedBox(
         width: widget.radius,
         height: BOX_HEIGHT,
@@ -96,6 +130,6 @@ class PulsatingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PulsatingPainter oldDelegate) {
-    return true;
+    return false;
   }
 }
