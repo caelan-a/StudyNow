@@ -45,7 +45,7 @@ class Floor {
           Size(image.width.toDouble(), image.height.toDouble());
       floorPlanImage = file;
       imageLoaded = true;
-    }, false);
+    }, true);
   }
 
   Future<bool> _init() {
@@ -61,6 +61,7 @@ class Floor {
 
       for (DocumentSnapshot cameraZoneDoc in snapshot.documents) {
         String cameraZoneID = cameraZoneDoc.documentID;
+        String cameraZoneTitle = cameraZoneDoc['title'];
         String fsCameraZonePath = fsPath + '/camera_zones/' + cameraZoneID;
         cameraZones.putIfAbsent(
             cameraZoneID, () => CameraZone(fsPath: fsCameraZonePath));
@@ -99,7 +100,8 @@ class LibraryInfo {
         String floorTitle = floorDoc['title'].toString();
         print(floorID + " : " + floorTitle);
         String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
-        floors.putIfAbsent(floorID, () => Floor(fsPath: fsFloorPath, title:floorTitle));
+        floors.putIfAbsent(
+            floorID, () => Floor(fsPath: fsFloorPath, title: floorTitle));
       }
     });
   }
