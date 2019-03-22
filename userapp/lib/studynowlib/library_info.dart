@@ -72,10 +72,6 @@ class Floor {
     });
   }
 
-  Widget _buildBusynessMarker() {
-    return null;
-  }
-
   Floor({this.fsPath, this.title}) {
     fbsFloorplanPath = fsPath + '/floor_plan.png';
     _init();

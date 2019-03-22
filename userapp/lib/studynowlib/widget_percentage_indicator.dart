@@ -8,14 +8,18 @@ class PercentageIndicator extends StatelessWidget {
   final double radius;
   final double lineWidth;
   final double fontSize;
+  final bool showPercentage;
 
+  final Color inactiveColor;
   final Color textColor;
 
   PercentageIndicator(
       {this.totalSeats,
+      this.showPercentage = true,
       this.offsetFactor = 0,
       this.totalPeople,
       this.textColor = Colors.black,
+      this.inactiveColor = const Color(0xFFB8C7CB),
       this.radius = 70.0,
       this.lineWidth = 6.0,
       this.fontSize = 16.0});
@@ -43,12 +47,14 @@ class PercentageIndicator extends StatelessWidget {
         animateFromLastPercent: true,
         circularStrokeCap: CircularStrokeCap.round,
         radius: radius,
+        backgroundColor: inactiveColor ?? inactiveColor,
+        
         lineWidth: lineWidth,
         percent: percentageFull / 100.0,
-        center: new Text(
+        center: showPercentage ? new Text(
           "$percentageFull%",
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.normal),
-        ),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.normal, color: textColor),
+        ) : Container(),
         progressColor: color,
       )
     ]);

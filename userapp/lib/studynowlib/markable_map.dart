@@ -196,7 +196,7 @@ class _MarkableMapState extends State<MarkableMap> {
         stream: Firestore.instance.document(fsCameraZonePath).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return null;
+            return Container();
           } else {
             var data = snapshot.data;
             double markerX = data['marker_position_on_image_x'].toDouble();
@@ -215,27 +215,34 @@ class _MarkableMapState extends State<MarkableMap> {
             double size =
                 _scale * widget.controller.maxMarkerSize * markerScale;
             print(size);
+
+            double indicatorRadius = 70.0;
+            double indicatorLineWidth = 10.0;
+
             return Stack(children: <Widget>[
               Positioned(
                 left: screenCoords.dx,
                 top: screenCoords.dy,
                 child: PulsatingMarker(
-                  color: Colors.green,
+                  color: color,
                   maxOpacity: 0.25,
                   screenPosition: Offset(0, 0),
                   radius: size,
                 ),
               ),
               Positioned(
-                left: screenCoords.dx - 35 * _scale,
-                top: screenCoords.dy - 35 * _scale,
+                left: screenCoords.dx - (_scale * (indicatorRadius) / 2.0),
+                top: screenCoords.dy - (_scale * (indicatorRadius) / 2.0),
                 child: PercentageIndicator(
-                    fontSize: 16.0 * _scale,
-                    radius: _scale * 70.0,
-                    lineWidth: _scale * 6.0,
-                    totalPeople: peoplePresent,
-                    totalSeats: chairsPresent,
-                  ),
+                  showPercentage: false,
+                  fontSize: 16.0 * _scale,
+                  textColor: Colors.white,
+                  inactiveColor: Colors.white,
+                  radius: _scale * indicatorRadius,
+                  lineWidth: _scale * indicatorLineWidth,
+                  totalPeople: peoplePresent,
+                  totalSeats: chairsPresent,
+                ),
               ),
             ]);
           }

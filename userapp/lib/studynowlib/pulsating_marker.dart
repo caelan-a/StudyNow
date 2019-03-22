@@ -5,7 +5,8 @@ import 'dart:math';
   Using photo_view creates a map that user can place markers on which move around 
 */
 
-const double BOX_HEIGHT = 10.0; // Sets height of icon in widget tree that draws painter. Set low so it doesnt interfere with touch events
+const double BOX_HEIGHT =
+    10.0; // Sets height of icon in widget tree that draws painter. Set low so it doesnt interfere with touch events
 
 class PulsatingMarker extends StatefulWidget {
   final Offset screenPosition;
@@ -45,22 +46,19 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
     );
 
     drop_pin_tween = Tween<double>(
-      begin:0,
-      end:1.5,
+      begin: 0,
+      end: 1.5,
     ).animate(CurvedAnimation(
-        parent:_dropController,
-        curve: Curves.bounceOut,
+      parent: _dropController,
+      curve: Curves.bounceOut,
     ))
-    ..addListener((){
-      setState(() {
-        
+      ..addListener(() {
+        setState(() {});
       });
-    });
 
     _startAnimation();
     super.initState();
   }
-
 
   @override
   void dispose() {
@@ -74,25 +72,27 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
     _controller.stop();
     _controller.reset();
 
-
     _dropController.stop();
     _dropController.reset();
     _dropController.forward();
 
-
     _controller.repeat(
       period: Duration(seconds: 1),
     );
-
   }
 
   @override
   Widget build(BuildContext context) {
-
-
     return CustomPaint(
       willChange: true,
-      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: drop_pin_tween.value, maxOpacity: widget.maxOpacity), // controler.value*scale || widget.scale
+      painter: PulsatingPainter(
+          animation: _controller,
+          screenPosition: widget.screenPosition,
+          baseRadius: widget.radius,
+          baseColor: widget.color,
+          scale: drop_pin_tween.value,
+          maxOpacity:
+              widget.maxOpacity), // controler.value*scale || widget.scale
       child: new SizedBox(
         width: widget.radius,
         height: BOX_HEIGHT,
@@ -110,16 +110,29 @@ class PulsatingPainter extends CustomPainter {
   final Color baseColor;
   final double maxOpacity;
 
-  PulsatingPainter({@required this.animation, @required this.screenPosition, @required this.baseRadius, @required this.scale, @required this.baseColor, this.maxOpacity = 0.3})
+  PulsatingPainter(
+      {@required this.animation,
+      @required this.screenPosition,
+      @required this.baseRadius,
+      @required this.scale,
+      @required this.baseColor,
+      this.maxOpacity = 0.3})
       : super(repaint: animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
     double opacity = (1.0 - (value / 4.0)).clamp(0.0, maxOpacity);
     Color color = baseColor.withOpacity(opacity);
 
-    double radius = scale * baseRadius *sqrt(value);
+    double radius = scale * baseRadius * sqrt(value);
     final Paint paint = new Paint()..color = color;
     canvas.drawCircle(screenPosition, radius, paint);
+
+    // Color shadowColor = Colors.grey;
+    // final Paint shadowPaint = new Paint()..color = shadowColor.withAlpha(50);
+    // canvas.drawCircle(screenPosition, baseRadius / 1.15, shadowPaint);
+    // Color centerColor = Colors.white;
+    // final Paint centerPaint = new Paint()..color = centerColor;
+    // canvas.drawCircle(screenPosition, baseRadius / 1.2, centerPaint);
   }
 
   @override
