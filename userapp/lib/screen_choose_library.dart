@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'studynowlib/widget_percentage_indicator.dart';
 import 'screen_map_view.dart';
 import 'main.dart';
 
@@ -54,45 +55,16 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
         ));
   }
 
-  Widget _buildPercentageWidget(int totalSeats, int totalPeople, int offsetFactor) {
-    const int offsetMagnitude = 75;
-    int percentageFull = (100 * (totalPeople / totalSeats)).toInt();
-    Color color = percentageFull < 25
-        ? Colors.green
-        : percentageFull < 50
-            ? Colors.yellow
-            : percentageFull < 75 ? Colors.orange : Colors.red;
-    // Color color = Theme.of(context).primaryColor;
-
-    return Stack(children: <Widget>[
-      CircularPercentIndicator(
-        animation: true,
-        animationDuration: 400 + offsetFactor * offsetMagnitude,
-        startAngle: 270.0,
-        animateFromLastPercent: true,
-        circularStrokeCap: CircularStrokeCap.round,
-        radius: 70.0,
-        lineWidth: 6.0,
-        percent: percentageFull / 100.0,
-        center: new Text(
-          "$percentageFull%",
-          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal),
-        ),
-        progressColor: color,
-      )
-    ]);
-  }
-
   Widget _buildLibraryTile(
       String libraryTitle, String libraryID, int totalSeats, int totalPeople, int tileIndex) {
     return Container(
-      padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+      padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0.0),
       child: Card(
         // margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
-        elevation: 3.0,
+        elevation: 4.0,
         child: ListTile(
           contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-          leading: _buildPercentageWidget(totalSeats, totalPeople, tileIndex),
+          leading: PercentageIndicator(totalSeats: totalSeats, totalPeople: totalPeople, offsetFactor: tileIndex,),
           title: Text(
             libraryTitle,
             style: TextStyle(
@@ -113,8 +85,9 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
             Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(
                 builder: (context) => MapScreen(
-                      library: _chosenLibrary,
+                      libraryCollectionPath: '/libraries/' + _chosenLibrary,
                       libraryTitle: libraryTitle,
+                      initialFloorID: "1",
                     ),
               ),
             );
