@@ -12,6 +12,7 @@ class PulsatingMarker extends StatefulWidget {
   final Color color;
   final double radius;
   final double scale;
+  final double maxOpacity;
 
   PulsatingMarker({
     Key key,
@@ -19,6 +20,7 @@ class PulsatingMarker extends StatefulWidget {
     this.radius = 150.0,
     this.scale = 1.0,
     @required this.screenPosition,
+    this.maxOpacity = 0.3,
   });
 
   @override
@@ -90,7 +92,7 @@ class _PulsatingMarkerState extends State<PulsatingMarker>
 
     return CustomPaint(
       willChange: true,
-      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: drop_pin_tween.value), // controler.value*scale || widget.scale
+      painter: PulsatingPainter(animation: _controller, screenPosition: widget.screenPosition, baseRadius: widget.radius, baseColor: widget.color, scale: drop_pin_tween.value, maxOpacity: widget.maxOpacity), // controler.value*scale || widget.scale
       child: new SizedBox(
         width: widget.radius,
         height: BOX_HEIGHT,
@@ -106,12 +108,13 @@ class PulsatingPainter extends CustomPainter {
   final double baseRadius;
   final double scale;
   final Color baseColor;
+  final double maxOpacity;
 
-  PulsatingPainter({@required this.animation, @required this.screenPosition, @required this.baseRadius, @required this.scale, @required this.baseColor})
+  PulsatingPainter({@required this.animation, @required this.screenPosition, @required this.baseRadius, @required this.scale, @required this.baseColor, this.maxOpacity = 0.3})
       : super(repaint: animation);
 
   void circle(Canvas canvas, Rect rect, double value) {
-    double opacity = (1.0 - (value / 4.0)).clamp(0.0, 0.3);
+    double opacity = (1.0 - (value / 4.0)).clamp(0.0, maxOpacity);
     Color color = baseColor.withOpacity(opacity);
 
     double radius = scale * baseRadius *sqrt(value);

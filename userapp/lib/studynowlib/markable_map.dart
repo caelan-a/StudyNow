@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 
+import 'widget_percentage_indicator.dart';
+import 'pulsating_marker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /*
   Using photo_view creates a mapo that user can place markers on which move around 
 */
@@ -29,14 +33,16 @@ class MarkableMapController {
 
   double initialMapScale;
 
-  MarkableMapController({
-    this.initialMarkerScale = 0.25,
-    this.deleteRadius = 20,
-    this.maxMarkerSize = 100.0,
-    this.currentWidgetBuilder,
-    this.maxMarkerCount,
-    this.initialMapScale = 1.0,
-  }) {
+  List<String> cameraZoneFSPaths;
+
+  MarkableMapController(
+      {this.initialMarkerScale = 0.25,
+      this.deleteRadius = 20,
+      this.maxMarkerSize = 100.0,
+      this.currentWidgetBuilder,
+      this.maxMarkerCount,
+      this.initialMapScale = 1.0,
+      this.cameraZoneFSPaths}) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
             left: position.dx,
@@ -185,6 +191,57 @@ class _MarkableMapState extends State<MarkableMap> {
     return marker.widgetBuilder(size, screenCoords);
   }
 
+  Widget _buildStreamMarker(String fsCameraZonePath) {
+    return StreamBuilder(
+        stream: Firestore.instance.document(fsCameraZonePath).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return null;
+          } else {
+            var data = snapshot.data;
+            double markerX = data['marker_position_on_image_x'].toDouble();
+            double markerY = data['marker_position_on_image_y'].toDouble();
+            double markerScale = data['marker_scale'].toDouble();
+            int chairsPresent = data['chairs_present'];
+            int peoplePresent = data['people_present'];
+            int percentageFull = 100 * chairsPresent ~/ peoplePresent;
+
+            print("$fsCameraZonePath");
+            Color color = PercentageIndicator.getColor(percentageFull);
+
+            Offset screenCoords =
+                convertToScreenCoords(Offset(markerX, markerY));
+            print(screenCoords);
+            double size =
+                _scale * widget.controller.maxMarkerSize * markerScale;
+            print(size);
+            return Stack(children: <Widget>[
+              Positioned(
+                left: screenCoords.dx,
+                top: screenCoords.dy,
+                child: PulsatingMarker(
+                  color: Colors.green,
+                  maxOpacity: 0.25,
+                  screenPosition: Offset(0, 0),
+                  radius: size,
+                ),
+              ),
+              Positioned(
+                left: screenCoords.dx - 35 * _scale,
+                top: screenCoords.dy - 35 * _scale,
+                child: PercentageIndicator(
+                    fontSize: 16.0 * _scale,
+                    radius: _scale * 70.0,
+                    lineWidth: _scale * 6.0,
+                    totalPeople: peoplePresent,
+                    totalSeats: chairsPresent,
+                  ),
+              ),
+            ]);
+          }
+        });
+  }
+
   void _onSliderValueChanged(double value) {
     setState(() {
       widget.controller.currentMarkerScale = value;
@@ -281,6 +338,15 @@ class _MarkableMapState extends State<MarkableMap> {
 
     if (widget.editable && widget.sizeableMarkers) {
       children.add(_buildMarkerSizeSlider());
+    }
+
+    //  Add any widgets from stream
+    if (widget.controller.cameraZoneFSPaths != null) {
+      List<Widget> streamMarkerWidgets = widget.controller.cameraZoneFSPaths
+          .map(
+              (String cameraZoneFSPath) => _buildStreamMarker(cameraZoneFSPath))
+          .toList();
+      children.addAll(streamMarkerWidgets);
     }
 
     return widget.editable

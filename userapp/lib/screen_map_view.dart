@@ -35,14 +35,17 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void initState() {
-    _markableMapController = MarkableMapController(initialMapScale: 0.27);
-
     _currentFloorID = widget.initialFloorID;
     _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
     _libraryInfo.init(widget.libraryCollectionPath).then((success) {
       _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
         setState(() {
           print("Show map");
+          _markableMapController = MarkableMapController(
+              initialMapScale: 1.0,
+              cameraZoneFSPaths:
+                  _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
+
           _showMap = true;
         });
       });
@@ -77,9 +80,7 @@ class _MapScreenState extends State<MapScreen> {
                 Navigator.pop(context);
               },
             ),
-            Text(
-                _showMap
-                    ? widget.libraryTitle : "",
+            Text(_showMap ? widget.libraryTitle : "",
                 style: TextStyle(
                   fontSize: 14.0,
                 )),

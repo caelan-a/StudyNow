@@ -7,9 +7,12 @@ import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 import 'database.dart';
+import 'pulsating_marker.dart';
+import 'markable_map.dart';
 
 class CameraZone {
   String fsPath;
+  String title;
 
   int chairs_present;
   int people_present;
@@ -17,11 +20,7 @@ class CameraZone {
   Offset markerPosition;
   double markerScale;
 
-  CameraZone({this.fsPath});
-
-  Widget _buildBusynessMarker() {
-    return null;
-  }
+  CameraZone({this.fsPath, this.title});
 }
 
 class Floor {
@@ -48,8 +47,12 @@ class Floor {
     }, true);
   }
 
+  List<String> getCameraZoneFSPaths() {
+    return cameraZones.values.map((CameraZone cameraZone) => cameraZone.fsPath).toList();
+  }
+
   Future<bool> _init() {
-    Firestore.instance
+    return Firestore.instance
         .collection(fsPath + '/camera_zones')
         .snapshots()
         .first
@@ -63,8 +66,8 @@ class Floor {
         String cameraZoneID = cameraZoneDoc.documentID;
         String cameraZoneTitle = cameraZoneDoc['title'];
         String fsCameraZonePath = fsPath + '/camera_zones/' + cameraZoneID;
-        cameraZones.putIfAbsent(
-            cameraZoneID, () => CameraZone(fsPath: fsCameraZonePath));
+        cameraZones.putIfAbsent(cameraZoneID,
+            () => CameraZone(fsPath: fsCameraZonePath, title: cameraZoneTitle));
       }
     });
   }

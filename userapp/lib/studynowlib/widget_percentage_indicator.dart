@@ -5,20 +5,34 @@ class PercentageIndicator extends StatelessWidget {
   final int totalSeats;
   final int totalPeople;
   final int offsetFactor;
+  final double radius;
+  final double lineWidth;
+  final double fontSize;
 
   final Color textColor;
 
-  PercentageIndicator({this.totalSeats, this.offsetFactor = 0, this.totalPeople, this.textColor = Colors.black});
+  PercentageIndicator(
+      {this.totalSeats,
+      this.offsetFactor = 0,
+      this.totalPeople,
+      this.textColor = Colors.black,
+      this.radius = 70.0,
+      this.lineWidth = 6.0,
+      this.fontSize = 16.0});
+
+  static Color getColor(int percentageFull) {
+    return percentageFull < 25
+        ? Colors.green
+        : percentageFull < 50
+            ? Colors.yellow
+            : percentageFull < 75 ? Colors.orange : Colors.red;
+  }
 
   @override
   Widget build(BuildContext context) {
     const int offsetMagnitude = 75;
     int percentageFull = (100 * (totalPeople / totalSeats)).toInt();
-    Color color = percentageFull < 25
-        ? Colors.green
-        : percentageFull < 50
-            ? Colors.yellow
-            : percentageFull < 75 ? Colors.orange : Colors.red;
+    Color color = getColor(percentageFull);
     // Color color = Theme.of(context).primaryColor;
 
     return Stack(children: <Widget>[
@@ -28,12 +42,12 @@ class PercentageIndicator extends StatelessWidget {
         startAngle: 270.0,
         animateFromLastPercent: true,
         circularStrokeCap: CircularStrokeCap.round,
-        radius: 70.0,
-        lineWidth: 6.0,
+        radius: radius,
+        lineWidth: lineWidth,
         percent: percentageFull / 100.0,
         center: new Text(
           "$percentageFull%",
-          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.normal),
         ),
         progressColor: color,
       )
