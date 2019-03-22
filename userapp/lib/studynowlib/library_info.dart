@@ -40,12 +40,12 @@ class Floor {
     return Database.downloadFile(fbsFloorplanPath, (File file) async {
       //  Get image properties when file is retrived
       List<int> imageBytes = await file.readAsBytes();
-      imageutil.Image image = imageutil.decodeJpg(imageBytes);
+      imageutil.Image image = imageutil.decodePng(imageBytes);
       floorPlanImageSize =
           Size(image.width.toDouble(), image.height.toDouble());
       floorPlanImage = file;
       imageLoaded = true;
-    });
+    }, false);
   }
 
   Future<bool> _init() {
@@ -73,7 +73,7 @@ class Floor {
   }
 
   Floor({this.fsPath, this.title}) {
-    fbsFloorplanPath = fsPath + '/image.jpg';
+    fbsFloorplanPath = fsPath + '/floor_plan.png';
     _init();
   }
 }

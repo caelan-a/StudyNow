@@ -31,15 +31,18 @@ class _MapScreenState extends State<MapScreen> {
   bool _showMap = false;
   LibraryInfo _libraryInfo;
   String _currentFloorID;
+  MarkableMapController _markableMapController;
 
   @override
   void initState() {
+    _markableMapController = MarkableMapController(initialMapScale: 0.27);
+
     _currentFloorID = widget.initialFloorID;
     _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
     _libraryInfo.init(widget.libraryCollectionPath).then((success) {
-      setState(() {
-        print(_libraryInfo.floors['mez'].title);
-        _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
+      _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
+        setState(() {
+          print("Show map");
           _showMap = true;
         });
       });
@@ -50,8 +53,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Floor currentFloor = _libraryInfo.floors[_currentFloorID];
-
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Theme.of(context).canvasColor,
@@ -76,14 +77,16 @@ class _MapScreenState extends State<MapScreen> {
                 Navigator.pop(context);
               },
             ),
-            Text(widget.libraryTitle,
+            Text(
+                _showMap
+                    ? widget.libraryTitle : "",
                 style: TextStyle(
                   fontSize: 14.0,
                 )),
             Padding(
               padding: EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 0.0),
             ),
-            Text(_libraryInfo.floors[_currentFloorID].title,
+            Text(_showMap ? _libraryInfo.floors[_currentFloorID].title : "",
                 style: TextStyle(
                   fontSize: 14.0,
                 )),
@@ -122,14 +125,16 @@ class _MapScreenState extends State<MapScreen> {
       body: Center(
         child: _showMap
             ? MarkableMap(
-                imageFile: currentFloor.floorPlanImage,
-                imageSize: currentFloor.floorPlanImageSize,
+                controller: _markableMapController,
+                imageFile: _libraryInfo.floors[_currentFloorID].floorPlanImage,
+                imageSize:
+                    _libraryInfo.floors[_currentFloorID].floorPlanImageSize,
                 editable: false,
                 screenSize: MediaQuery.of(context).size,
               )
             : CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).primaryColor),
               ),
       ),
     );
