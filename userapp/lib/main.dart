@@ -8,6 +8,12 @@ class Main extends StatelessWidget {
   static final GlobalKey<NavigatorState> _rootNavKey =
       GlobalKey<NavigatorState>();
 
+  // FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+  // FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+  //     .setTimestampsInSnapshotsEnabled(true)
+  //     .build();
+  // firestore.setFirestoreSettings(settings);
+
   static GlobalKey<NavigatorState> getRootNavKey() {
     return _rootNavKey;
   }

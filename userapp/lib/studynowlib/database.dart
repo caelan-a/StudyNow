@@ -10,7 +10,9 @@ class Database {
   static Future<void> downloadFile(
       String fbsPath, Function(File) onComplete) async {
     Directory tempDir = Directory.systemTemp;
-    String localPath = '${tempDir.path} $fbsPath';
+    List<String> fbsPath_split = fbsPath.split('/');
+
+    String localPath = '${tempDir.path}/image.jpg';
     final File file = File(localPath);
 
     if (await file.exists()) {

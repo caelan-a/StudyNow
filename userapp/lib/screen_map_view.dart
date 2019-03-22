@@ -39,7 +39,9 @@ class _MapScreenState extends State<MapScreen> {
     _libraryInfo.init(widget.libraryCollectionPath).then((success) {
       setState(() {
         print(_libraryInfo.floors['mez'].title);
-        _showMap = true;
+        _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
+          _showMap = true;
+        });
       });
     });
 
@@ -48,85 +50,88 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Floor currentFloor = _libraryInfo.floors[_currentFloorID];
+
     return Scaffold(
-        floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: Theme.of(context).canvasColor,
-          shape: CircleBorder(),
-          elevation: 5.0,
-          label: PercentageIndicator(
-            totalPeople: 5,
-            totalSeats: 14,
-          ),
-          onPressed: () {},
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).canvasColor,
+        shape: CircleBorder(),
+        elevation: 5.0,
+        label: PercentageIndicator(
+          totalPeople: 5,
+          totalSeats: 14,
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          notchMargin: 4.0,
-          child: new Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+        onPressed: () {},
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        notchMargin: 4.0,
+        child: new Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            Text(widget.libraryTitle,
+                style: TextStyle(
+                  fontSize: 14.0,
+                )),
+            Padding(
+              padding: EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 0.0),
+            ),
+            Text(_libraryInfo.floors[_currentFloorID].title,
+                style: TextStyle(
+                  fontSize: 14.0,
+                )),
+            _showMap
+                ? PopupMenuButton<String>(
+                    offset:
+                        Offset(0.0, -MediaQuery.of(context).size.height / 5.0),
+                    icon: Icon(Icons.clear_all),
+                    initialValue: _currentFloorID,
+                    onCanceled: () => print("Tapped outside the menu"),
+                    onSelected: (floorID) {
+                      setState(() {
+                        _currentFloorID = floorID;
+                        print("Current floor: $_currentFloorID");
+                      });
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return _libraryInfo.floors.values.map((floor) {
+                        return PopupMenuItem<String>(
+                          enabled: true,
+                          value: floor.floorID,
+                          child: Text(floor.title),
+                        );
+                      }).toList();
+                    },
+                  )
+                : IconButton(
+                    icon: Icon(Icons.clear_all),
+                    onPressed: () {
+                      // Navigator.pop(context);
+                    },
+                  ),
+          ],
+        ),
+      ),
+      body: Center(
+        child: _showMap
+            ? MarkableMap(
+                imageFile: currentFloor.floorPlanImage,
+                imageSize: currentFloor.floorPlanImageSize,
+                editable: false,
+                screenSize: MediaQuery.of(context).size,
+              )
+            : CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
               ),
-
-              _showMap
-                  ? PopupMenuButton<String>(
-                      icon: Icon(Icons.clear_all),
-                      initialValue: _currentFloorID,
-                      onCanceled: () => print("Tapped outside the menu"),
-                      onSelected: (floorID) {
-                        setState(() {
-                          _currentFloorID = floorID;
-                        });
-                      },
-                      itemBuilder: (BuildContext context) {
-                        return _libraryInfo.floors.values.map((floor) {
-                          return PopupMenuItem<String>(
-                            value: floor.floorID,
-                            child: Text(floor.title),
-                          );
-                        }).toList();
-                      },
-                    )
-                  : IconButton(
-                      icon: Icon(Icons.clear_all),
-                      onPressed: () {
-                        // Navigator.pop(context);
-                      },
-                    ),
-            ],
-          ),
-        ),
-        body: StreamBuilder<DocumentSnapshot>(
-          stream: Firestore.instance
-              .document(widget.libraryCollectionPath)
-              .snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-            if (snapshot.hasError) return new Text('Error: ${snapshot.error}');
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return Center(
-                    child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).primaryColor),
-                    ),
-                  ],
-                ));
-
-              default:
-                // _libraryInfo = LibraryInfo(snapshot.data);
-                return Container();
-            }
-          },
-        ));
+      ),
+    );
   }
 }

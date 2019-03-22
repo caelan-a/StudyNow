@@ -96,7 +96,7 @@ class LibraryInfo {
 
       for (DocumentSnapshot floorDoc in snapshot.documents) {
         String floorID = floorDoc.documentID.toString();
-        String floorTitle = floorDoc['next_collection'].toString();
+        String floorTitle = floorDoc['title'].toString();
         print(floorID + " : " + floorTitle);
         String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
         floors.putIfAbsent(floorID, () => Floor(fsPath: fsFloorPath, title:floorTitle));
