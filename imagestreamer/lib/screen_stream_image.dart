@@ -4,6 +4,7 @@ import 'main.dart';
 import 'dart:async';
 import 'screen_settings.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -26,7 +27,7 @@ class StreamImageScreen extends StatefulWidget {
 
 class _StreamImageScreenState extends State<StreamImageScreen>
     with SingleTickerProviderStateMixin {
-  bool _timerPaused = false;
+  bool _timerPaused = true;
   bool _readyToStream = false;
   bool _capturing = false;
   List<CameraDescription> cameras;
@@ -62,10 +63,15 @@ class _StreamImageScreenState extends State<StreamImageScreen>
   void initState() {
     getCameraController().then((c) {
       controller = c;
-      _readyToStream = true;
-      startTimeout();
     });
     super.initState();
+  }
+
+  Future<void> setCaptureUrl(
+      String captureName, String fbsCaptureUrl, String fsCameraZonePath) async {
+    Firestore.instance.document(fsCameraZonePath).setData({
+      "capture_urls": {captureName: fbsCaptureUrl},
+    }, merge: true);
   }
 
   Future<void> sendImagesToFirebase() async {
@@ -77,6 +83,12 @@ class _StreamImageScreenState extends State<StreamImageScreen>
       File file = File(capture.localPath);
       final StorageUploadTask task =
           firebaseStorageRef.child(capture.name).putFile(file);
+      await task.onComplete.then((result) async {
+        //  Set url for download in firestore
+        await setCaptureUrl(capture.name, await result.ref.getDownloadURL(),
+            Main.cameraZone.getFirebasePath());
+        print("Uploaded ${capture.name} successfully");
+      });
     }
 
     _capturing = false;
@@ -154,7 +166,6 @@ class _StreamImageScreenState extends State<StreamImageScreen>
               _pauseTimer();
               bool settingsChanged =
                   await Main.toScreen(context, SettingsScreen());
-              _resumeTimer();
               print(settingsChanged);
               if (settingsChanged == true) {
                 print("CHANGE");
