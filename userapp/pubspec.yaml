@@ -32,6 +32,7 @@ dev_dependencies:
   photo_view:
   image:
   percent_indicator: ^1.0.14
+  path_provider:
   # studynowlib:
   #   path: '../studynowlib'
 

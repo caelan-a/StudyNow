@@ -4,12 +4,13 @@ import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
+import 'package:path_provider/path_provider.dart';
 
 class Database {
   //  Download file from firebase and store locally or retrieve local if already present
   static Future<void> downloadFile(
       String fbsPath, Function(File) onComplete, bool checkLocal) async {
-    Directory tempDir = Directory.systemTemp;
+    Directory tempDir = await getTemporaryDirectory();
     List<String> fbsPath_split = fbsPath.split('/');
 
     String localPath = '${tempDir.path}/floor_plan.png';
