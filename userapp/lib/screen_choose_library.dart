@@ -55,8 +55,8 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
         ));
   }
 
-  Widget _buildLibraryTile(
-      String libraryTitle, String libraryID, int totalSeats, int totalPeople, int tileIndex) {
+  Widget _buildLibraryTile(String libraryTitle, String libraryID,
+      int totalSeats, int totalPeople, int tileIndex) {
     return Container(
       padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0.0),
       child: Card(
@@ -64,7 +64,11 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
         elevation: 4.0,
         child: ListTile(
           contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-          leading: PercentageIndicator(totalSeats: totalSeats, totalPeople: totalPeople, offsetFactor: tileIndex,),
+          leading: PercentageIndicator(
+            totalSeats: totalSeats,
+            totalPeople: totalPeople,
+            offsetFactor: tileIndex,
+          ),
           title: Text(
             libraryTitle,
             style: TextStyle(
@@ -88,7 +92,8 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                       libraryCollectionPath: '/libraries/' + _chosenLibrary,
                       libraryTitle: libraryTitle,
                       initialFloorID: "1",
-                      initialFSFloorPath: '/libraries/' + _chosenLibrary + '/floors/' + "1",
+                      initialFSFloorPath:
+                          '/libraries/' + _chosenLibrary + '/floors/' + "1",
                     ),
               ),
             );
@@ -133,13 +138,19 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         _buildLibraryTile(
-                            document['title'], document.documentID, 400, 85, 0),
+                            document['title'], document.documentID, 100, 14, 0),
                         _buildLibraryTile(
-                            "Giblin", document.documentID, 300, 100, 1),
+                            "Giblin", document.documentID,100, 20, 1),
                         _buildLibraryTile(
-                            "Brownless", document.documentID, 220, 120, 2),
+                            "Brownless", document.documentID, 100, 23, 2),
                         _buildLibraryTile(
-                            "Arts", document.documentID, 557, 500, 3),
+                            "Arts", document.documentID,100, 34, 3),
+                        _buildLibraryTile(
+                            "ERC", document.documentID, 100, 49, 4),
+                        _buildLibraryTile(
+                            "Johnson", document.documentID, 100, 68, 5),
+                        _buildLibraryTile(
+                            "Euwin", document.documentID, 100, 89, 6),
                       ],
                     );
                   }).toList(),
