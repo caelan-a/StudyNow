@@ -17,11 +17,13 @@ class MapScreen extends StatefulWidget {
   final String libraryCollectionPath;
   final String libraryTitle;
   final String initialFloorID;
+  final String initialFSFloorPath;
 
   MapScreen(
       {@required this.libraryCollectionPath,
       this.libraryTitle = "Library",
-      this.initialFloorID});
+      this.initialFloorID,
+      this.initialFSFloorPath});
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -31,29 +33,85 @@ class _MapScreenState extends State<MapScreen> {
   bool _showMap = false;
   LibraryInfo _libraryInfo;
   String _currentFloorID;
+  String _fsCurrentFloorPath;
   MarkableMapController _markableMapController;
+
+  void showFloor(String floorID) {
+    _showMap = false;
+    _currentFloorID = floorID;
+    _fsCurrentFloorPath = _libraryInfo.floors[_currentFloorID].fsPath;
+    _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
+      setState(() {
+        print("Show map");
+        _markableMapController = MarkableMapController(
+            initialMapScale: 0.4,
+            minMapScale: 0.4,
+            maxMapScale: 0.5,
+            cameraZoneFSPaths:
+                _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
+
+        _showMap = true;
+      });
+    });
+  }
 
   @override
   void initState() {
-    _currentFloorID = widget.initialFloorID;
+    _fsCurrentFloorPath = widget.initialFSFloorPath;
     _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
     _libraryInfo.init(widget.libraryCollectionPath).then((success) {
-      _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
-        setState(() {
-          print("Show map");
-          _markableMapController = MarkableMapController(
-              initialMapScale: 0.4,
-              minMapScale: 0.4,
-              maxMapScale: 0.5,
-              cameraZoneFSPaths:
-                  _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
-
-          _showMap = true;
-        });
-      });
+      showFloor(widget.initialFloorID);
     });
 
     super.initState();
+  }
+
+  Widget _buildStreamPercentageIndicator(String fsFloorPath) {
+    return StreamBuilder(
+        stream: Firestore.instance.document(fsFloorPath).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return PercentageIndicator(
+              totalPeople: 0,
+              totalSeats: 10000,
+            );
+          } else {
+            var data = snapshot.data;
+            int peoplePresent = data['people_present'];
+            int chairsPresent = data['chairs_present'];
+
+            return PercentageIndicator(
+              totalPeople: peoplePresent,
+              totalSeats: chairsPresent,
+            );
+          }
+        });
+  }
+
+  void _select(String floorID) {
+    setState(() {
+      showFloor(floorID);
+      print("Current floor: $_currentFloorID");
+    });
+  }
+
+  Widget _buildFloorsMenu() {
+    return PopupMenuButton<String>(
+      offset: Offset(0.0, -MediaQuery.of(context).size.height / 5.0),
+      icon: Icon(Icons.clear_all),
+      initialValue: _currentFloorID,
+      onCanceled: () => print("Tapped off menu"),
+      onSelected: _select,
+      itemBuilder: (BuildContext context) {
+        return _libraryInfo.floors.values.map((floor) {
+          return PopupMenuItem<String>(
+            enabled: true,
+            value: floor.floorID,
+            child: Text(floor.title),
+          );
+        }).toList();
+      },
+    );
   }
 
   @override
@@ -63,10 +121,7 @@ class _MapScreenState extends State<MapScreen> {
         backgroundColor: Theme.of(context).canvasColor,
         shape: CircleBorder(),
         elevation: 5.0,
-        label: PercentageIndicator(
-          totalPeople: 5,
-          totalSeats: 14,
-        ),
+        label: _buildStreamPercentageIndicator(_fsCurrentFloorPath),
         onPressed: () {},
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -94,28 +149,7 @@ class _MapScreenState extends State<MapScreen> {
                   fontSize: 14.0,
                 )),
             _showMap
-                ? PopupMenuButton<String>(
-                    offset:
-                        Offset(0.0, -MediaQuery.of(context).size.height / 5.0),
-                    icon: Icon(Icons.clear_all),
-                    initialValue: _currentFloorID,
-                    onCanceled: () => print("Tapped outside the menu"),
-                    onSelected: (floorID) {
-                      setState(() {
-                        _currentFloorID = floorID;
-                        print("Current floor: $_currentFloorID");
-                      });
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return _libraryInfo.floors.values.map((floor) {
-                        return PopupMenuItem<String>(
-                          enabled: true,
-                          value: floor.floorID,
-                          child: Text(floor.title),
-                        );
-                      }).toList();
-                    },
-                  )
+                ? _buildFloorsMenu()
                 : IconButton(
                     icon: Icon(Icons.clear_all),
                     onPressed: () {

@@ -14,6 +14,7 @@ class PulsatingMarker extends StatefulWidget {
   final double radius;
   final double scale;
   final double maxOpacity;
+  final Widget child;
 
   PulsatingMarker({
     Key key,
@@ -22,6 +23,7 @@ class PulsatingMarker extends StatefulWidget {
     this.scale = 1.0,
     @required this.screenPosition,
     this.maxOpacity = 0.3,
+    this.child
   });
 
   @override

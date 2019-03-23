@@ -48,7 +48,11 @@ class Floor {
   }
 
   List<String> getCameraZoneFSPaths() {
-    return cameraZones.values.map((CameraZone cameraZone) => cameraZone.fsPath).toList();
+    if(cameraZones != null) {
+      return cameraZones.values.map((CameraZone cameraZone) => cameraZone.fsPath).toList();
+    } else {
+      return [];
+    }
   }
 
   Future<bool> _init() {

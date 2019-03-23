@@ -88,6 +88,7 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                       libraryCollectionPath: '/libraries/' + _chosenLibrary,
                       libraryTitle: libraryTitle,
                       initialFloorID: "1",
+                      initialFSFloorPath: '/libraries/' + _chosenLibrary + '/floors/' + "1",
                     ),
               ),
             );
