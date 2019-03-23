@@ -6,23 +6,27 @@ import 'dart:io';
 import 'package:image/image.dart' as imageutil;
 
 class Database {
-  //  Download file from firebase and store locally
-  static Future<void> downloadFile(String firebasePath, String localPath,
-      Function(dynamic) onDownloadComplete) async {
-    String fileName = firebasePath.split('/').last;
-    var floor = int.parse(firebasePath.split('/')[4]);
-
-    print("looking for the firebase info $firebasePath on floor $floor");
-    // print("Downloading image: $fileName from FirebaseStorage..");
+  //  Download file from firebase and store locally or retrieve local if already present
+  static Future<void> downloadFile(
+      String fbsPath, Function(File) onComplete, bool checkLocal) async {
     Directory tempDir = Directory.systemTemp;
-    final File file = File('${tempDir.path}/' + localPath);
+    List<String> fbsPath_split = fbsPath.split('/');
 
-    // print(fileName);
+    String localPath = '${tempDir.path}/floor_plan.png';
+    final File file = File(localPath);
 
-    final StorageReference ref =
-        FirebaseStorage.instance.ref().child(firebasePath);
-    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-
-    downloadTask.future.then((snapshot) => onDownloadComplete(snapshot));
+    if (await file.exists() && checkLocal) {
+      print("$localPath exists\nRetrieving locally..");
+      return onComplete(file);
+    } else {
+      print("$localPath does not exists\nDownloading from Firebase Storage..");
+      final StorageReference ref =
+          FirebaseStorage.instance.ref().child(fbsPath);
+      final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+      return downloadTask.future.then((snapshot) {
+        print("Downloaded successfully");
+        return onComplete(file);
+      });
+    }
   }
 }

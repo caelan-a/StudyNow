@@ -7,9 +7,12 @@ import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 import 'database.dart';
+import 'pulsating_marker.dart';
+import 'markable_map.dart';
 
 class CameraZone {
-  String fsCameraZonePath;
+  String fsPath;
+  String title;
 
   int chairs_present;
   int people_present;
@@ -17,58 +20,94 @@ class CameraZone {
   Offset markerPosition;
   double markerScale;
 
-  CameraZone();
-
-  Widget _buildCameraZoneMarker() {
-    return Container();
-  }
+  CameraZone({this.fsPath, this.title});
 }
 
 class Floor {
-  String fsFloorPath;
+  String fsPath;
   String floorID; // firebase collection name of floor
   String title; // User friendly string
 
-  List<CameraZone> cameraZones;
+  Map<String, CameraZone> cameraZones;
 
-  String fsFloorplanPath; // FirebaseStorage floorplan path
+  bool imageLoaded = false;
+  String fbsFloorplanPath; // FirebaseStorage floorplan path
   File floorPlanImage;
-  int imageWidth;
-  int imageHeight;
+  Size floorPlanImageSize;
 
-
-  /* Get floorplan either from firebase or local storage if it exists */
-  // Future<bool> getFloorplan() {
-
-  // }
-
-  Floor();
-}
-
-class LibraryInfo {
-  String fsLibraryPath;
-  List<Floor> floors;
-
-  static void toSString() {
-    print("hello");
+  Future<void> getFloorPlan() async {
+    return Database.downloadFile(fbsFloorplanPath, (File file) async {
+      //  Get image properties when file is retrived
+      List<int> imageBytes = await file.readAsBytes();
+      imageutil.Image image = imageutil.decodePng(imageBytes);
+      floorPlanImageSize =
+          Size(image.width.toDouble(), image.height.toDouble());
+      floorPlanImage = file;
+      imageLoaded = true;
+    }, true);
   }
 
+  List<String> getCameraZoneFSPaths() {
+    if(cameraZones != null) {
+      return cameraZones.values.map((CameraZone cameraZone) => cameraZone.fsPath).toList();
+    } else {
+      return [];
+    }
+  }
 
-  Future<bool> _initFloors(String fsLibraryPath) {
-    Firestore.instance.collection(fsLibraryPath+'/floors').snapshots().first.then((snapshot){
-      snapshot.documents.map((document){
-        print(document.documentID);
-      });
-      return true;
+  Future<bool> _init() {
+    return Firestore.instance
+        .collection(fsPath + '/camera_zones')
+        .snapshots()
+        .first
+        .then((snapshot) {
+      cameraZones = {};
+
+      int numCameraZones = snapshot.documents.length;
+      print("$numCameraZones camera zones in " + fsPath + '/camera_zones');
+
+      for (DocumentSnapshot cameraZoneDoc in snapshot.documents) {
+        String cameraZoneID = cameraZoneDoc.documentID;
+        String cameraZoneTitle = cameraZoneDoc['title'];
+        String fsCameraZonePath = fsPath + '/camera_zones/' + cameraZoneID;
+        cameraZones.putIfAbsent(cameraZoneID,
+            () => CameraZone(fsPath: fsCameraZonePath, title: cameraZoneTitle));
+      }
     });
   }
 
-  Future<bool> initialise(String fsLibraryPath) {
-    this.fsLibraryPath = fsLibraryPath;
-    print("Initialising library..");
+  Floor({this.fsPath, this.title}) {
+    fbsFloorplanPath = fsPath + '/floor_plan.png';
+    _init();
+  }
+}
+
+class LibraryInfo {
+  String fsPath;
+  Map<String, Floor> floors;
+
+  Future<bool> init(String fsLibraryPath) {
+    print("Initialising floors..");
+    return Firestore.instance
+        .collection(fsLibraryPath + '/floors')
+        .snapshots()
+        .first
+        .then((snapshot) {
+      floors = {};
+
+      int numFLoors = snapshot.documents.length;
+      print("$numFLoors floors in " + fsLibraryPath + '/floors');
+
+      for (DocumentSnapshot floorDoc in snapshot.documents) {
+        String floorID = floorDoc.documentID.toString();
+        String floorTitle = floorDoc['title'].toString();
+        print(floorID + " : " + floorTitle);
+        String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
+        floors.putIfAbsent(
+            floorID, () => Floor(fsPath: fsFloorPath, title: floorTitle));
+      }
+    });
   }
 
-  LibraryInfo({this.fsLibraryPath}) {
-    print("INIT");
-  }
+  LibraryInfo({this.fsPath});
 }

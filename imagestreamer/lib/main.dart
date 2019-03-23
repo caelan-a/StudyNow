@@ -8,7 +8,7 @@ void main() {
 }
 
 class Main extends StatelessWidget {
-  static CameraZone cameraZone = CameraZone(libraryID: "baileuu", floorID: "1", cameraZoneID: "1");
+  static CameraZone cameraZone = CameraZone(libraryID: "baileuu", floorID: "1", cameraZoneID: "1", numCapturesPerInterval: 1, timeInterval: 10);
 
   static Future<dynamic> toScreen(BuildContext context, Widget screen) {
     Future<dynamic> result = Navigator.push(context, CupertinoPageRoute(builder: (context) => screen));

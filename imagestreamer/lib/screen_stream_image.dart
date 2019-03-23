@@ -3,9 +3,20 @@ import 'package:flutter/cupertino.dart';
 import 'main.dart';
 import 'dart:async';
 import 'screen_settings.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:camera/camera.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+
+class Capture {
+  String localPath;
+  String name;
+
+  Capture({this.localPath, this.name});
+}
 
 class StreamImageScreen extends StatefulWidget {
-  int timeInterval; 
+  int timeInterval;
 
   StreamImageScreen({Key key, this.timeInterval}) : super(key: key);
 
@@ -13,30 +24,119 @@ class StreamImageScreen extends StatefulWidget {
   _StreamImageScreenState createState() => _StreamImageScreenState();
 }
 
-class _StreamImageScreenState extends State<StreamImageScreen> {
-  static const oneSec = const Duration(seconds:1);
-  int _timeElapsed = 0; 
+class _StreamImageScreenState extends State<StreamImageScreen>
+    with SingleTickerProviderStateMixin {
+  bool _timerPaused = false;
+  bool _readyToStream = false;
+  bool _capturing = false;
+  List<CameraDescription> cameras;
+  CameraController controller;
+
+  static const oneSec = const Duration(seconds: 1);
+  int _timeElapsed = 0;
+  int _numCapturesPerInterval = 1;
+
+  List<Capture> _captures;
 
   Timer timer;
 
+  Future<CameraController> getCameraController() async {
+    cameras = await availableCameras();
+    controller = CameraController(cameras[0], ResolutionPreset.low);
+    return controller.initialize().then((_) {
+      if (!mounted) {
+        return null;
+      }
+      setState(() {});
+      return controller;
+    });
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
-    timer = startTimeout(300);
+    getCameraController().then((c) {
+      controller = c;
+      _readyToStream = true;
+      startTimeout();
+    });
     super.initState();
   }
 
-  void captureImageSeries() {
-    
+  Future<void> sendImagesToFirebase() async {
+    final StorageReference firebaseStorageRef =
+        FirebaseStorage.instance.ref().child(Main.cameraZone.getFirebasePath());
+
+    for (Capture capture in _captures) {
+      print("Uploading ${capture.name}");
+      File file = File(capture.localPath);
+      final StorageUploadTask task =
+          firebaseStorageRef.child(capture.name).putFile(file);
+    }
+
+    _capturing = false;
   }
 
+  Future<void> captureImageSeries() async {
+    _capturing = true;
+    Directory tempDir = Directory.systemTemp;
+
+    _captures = [];
+    for (var i = 0; i < Main.cameraZone.numCapturesPerInterval; i++) {
+      print("Taking picture number $i");
+      String localPath = '${tempDir.path}/image_$i.png';
+      if (await File(localPath).exists()) {
+        await File(localPath).delete();
+      }
+
+      await controller.takePicture(localPath).then((void v) {
+        _captures.add(Capture(localPath: localPath, name: 'image_$i.png'));
+      });
+    }
+  }
+
+  void onTimeIntervalComplete() {
+    _timeElapsed = 0;
+    timer.cancel();
+    captureImageSeries().then((void v) {
+      sendImagesToFirebase().then((v) {
+        startTimeout();
+        print("Captures successfully uploaded\nRestarting timer");
+      });
+    });
+  }
+
+  //  Check if we need to reset actual timer so it doesnt reach int limit
   startTimeout([int milliseconds]) {
-     timer =  Timer.periodic(oneSec, (Timer t) {
-       if(_timeElapsed < 30) {
-         _timeElapsed++;
-       } else {
-         _timeElapsed = 0;
-       }
-     });
+    timer = Timer.periodic(oneSec, (Timer t) {
+      print(_timeElapsed);
+      setState(() {
+        if (_timeElapsed < Main.cameraZone.timeInterval) {
+          if (!_capturing) {
+            _timeElapsed++;
+          }
+        } else {
+          onTimeIntervalComplete();
+        }
+      });
+    });
+  }
+
+  _pauseTimer() {
+    print("pause timer");
+    _timerPaused = true;
+    timer.cancel();
+  }
+
+  _resumeTimer() {
+    print("resume timer");
+    _timerPaused = false;
+    startTimeout();
   }
 
   @override
@@ -51,8 +151,10 @@ class _StreamImageScreenState extends State<StreamImageScreen> {
               Icons.settings,
             ),
             onPressed: () async {
+              _pauseTimer();
               bool settingsChanged =
                   await Main.toScreen(context, SettingsScreen());
+              _resumeTimer();
               print(settingsChanged);
               if (settingsChanged == true) {
                 print("CHANGE");
@@ -63,9 +165,61 @@ class _StreamImageScreenState extends State<StreamImageScreen> {
       ),
       body: Stack(
         children: <Widget>[
+          Positioned(
+            bottom: 40.0,
+            left: 20.0,
+            child: Center(
+                child: Container(
+              child: Text("Streaming to ${Main.cameraZone.getFirebasePath()}"),
+            )),
+          ),
+          Positioned(
+            bottom: 120.0,
+            left: MediaQuery.of(context).size.width / 2.0 - 30.0,
+            child: Center(
+                child: Container(
+                    child: IconButton(
+              iconSize: 50.0,
+              icon: Icon(
+                _timerPaused ? Icons.play_arrow : Icons.pause,
+                size: 50.0,
+                color: Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                setState(() {
+                  if (!_timerPaused) {
+                    _pauseTimer();
+                  } else {
+                    _resumeTimer();
+                  }
+                });
+              },
+            ))),
+          ),
+          Positioned(
+            bottom: 20.0,
+            left: 20.0,
+            child: Center(
+                child: Container(
+              child: Text(
+                  "Capturing ${Main.cameraZone.numCapturesPerInterval} image(s) per time interval"),
+            )),
+          ),
           Center(
-              child: CircularProgressIndicator(
-            value: timer.tick.toDouble(),
+              child: CircularPercentIndicator(
+            circularStrokeCap: CircularStrokeCap.round,
+            center: _timeElapsed != 0
+                ? Text(
+                    "$_timeElapsed",
+                    style: TextStyle(color: Theme.of(context).primaryColor),
+                  )
+                : Container(),
+            animationDuration: 100,
+            radius: 100.0,
+            lineWidth: 6.0,
+            animateFromLastPercent: true,
+            progressColor: Theme.of(context).primaryColor,
+            percent: (_timeElapsed / Main.cameraZone.timeInterval).toDouble(),
           ))
         ],
       ),

@@ -16,6 +16,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   TextEditingController _libraryController;
   TextEditingController _floorController;
   TextEditingController _cameraZoneController;
+  TextEditingController _numCapturesPerIntervalController;
+  TextEditingController _timeIntervalController;
 
   @override
   void initState() {
@@ -23,6 +25,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _floorController = TextEditingController(text: Main.cameraZone.floorID);
     _cameraZoneController =
         TextEditingController(text: Main.cameraZone.cameraZoneID);
+    _cameraZoneController =
+        TextEditingController(text: Main.cameraZone.cameraZoneID);
+    _numCapturesPerIntervalController = TextEditingController(
+        text: Main.cameraZone.numCapturesPerInterval.toString());
+    _timeIntervalController =
+        TextEditingController(text: Main.cameraZone.timeInterval.toString());
 
     super.initState();
   }
@@ -37,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: <Widget>[
           Container(
-              padding: EdgeInsets.fromLTRB(20.0, 40.0, 20.0, 20.0),
+            padding: EdgeInsets.fromLTRB(20.0, 40.0, 20.0, 0.0),
             child: Text(
               "Change which camera zone this image streamer belongs to",
               textAlign: TextAlign.center,
@@ -48,9 +56,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Container(
-              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 20.0),
+              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 0.0),
               child: TextField(
-                style: TextStyle(fontSize: 24.0),
+                style: TextStyle(fontSize: 20.0),
                 decoration: InputDecoration(
                   labelText: 'Library ID',
                 ),
@@ -58,9 +66,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: (t) => print(t),
               )),
           Container(
-              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 20.0),
+              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 0.0),
               child: TextField(
-                style: TextStyle(fontSize: 24.0),
+                style: TextStyle(fontSize: 20.0),
                 decoration: InputDecoration(
                   labelText: 'Floor ID',
                 ),
@@ -68,13 +76,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: (t) => print(t),
               )),
           Container(
-              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 20.0),
+              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 0.0),
               child: TextField(
-                style: TextStyle(fontSize: 24.0),
+                style: TextStyle(fontSize: 20.0),
                 decoration: InputDecoration(
                   labelText: 'Camera Zone ID',
                 ),
                 controller: _cameraZoneController,
+                onChanged: (t) => print(t),
+              )),
+          Container(
+              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 0.0),
+              child: TextField(
+                style: TextStyle(fontSize: 20.0),
+                decoration: InputDecoration(
+                  labelText: 'Captures per interval',
+                ),
+                controller: _numCapturesPerIntervalController,
+                onChanged: (t) => print(t),
+              )),
+          Container(
+              padding: EdgeInsets.fromLTRB(20.0, 20.0, 100.0, 0.0),
+              child: TextField(
+                style: TextStyle(fontSize: 20.0),
+                decoration: InputDecoration(
+                  labelText: 'Time interval (s)',
+                ),
+                controller: _timeIntervalController,
                 onChanged: (t) => print(t),
               )),
           Container(
@@ -86,7 +114,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onPressed: () {
                   _settingsChanged = true;
-                  Main.cameraZone.setCameraZone(_libraryController.text, _floorController.text, _cameraZoneController.text);
+                  Main.cameraZone.setCameraZone(
+                      _libraryController.text,
+                      _floorController.text,
+                      _cameraZoneController.text,
+                      _numCapturesPerIntervalController.text,
+                      _timeIntervalController.text);
                   Navigator.pop(context, _settingsChanged);
                 },
                 color: Theme.of(context).primaryColor),
