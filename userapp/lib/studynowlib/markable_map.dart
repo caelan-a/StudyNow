@@ -204,7 +204,7 @@ class _MarkableMapState extends State<MarkableMap> {
             double markerScale = data['marker_scale'].toDouble();
             int chairsPresent = data['chairs_present'];
             int peoplePresent = data['people_present'];
-            int percentageFull = 100 * chairsPresent ~/ peoplePresent;
+            int percentageFull = 100 * peoplePresent ~/ chairsPresent;
 
             print("$fsCameraZonePath");
             Color color = PercentageIndicator.getColor(percentageFull);
@@ -216,8 +216,7 @@ class _MarkableMapState extends State<MarkableMap> {
                 _scale * widget.controller.maxMarkerSize * markerScale;
             print(size);
 
-            double indicatorRadius = 70.0;
-            double indicatorLineWidth = 10.0;
+            // Text percentageTextWidget = Text("$percentageFull%", style: TextStyle(color: Colors.white),),
 
             return Stack(children: <Widget>[
               Positioned(
@@ -231,19 +230,31 @@ class _MarkableMapState extends State<MarkableMap> {
                 ),
               ),
               Positioned(
-                left: screenCoords.dx - (_scale * (indicatorRadius) / 2.0),
-                top: screenCoords.dy - (_scale * (indicatorRadius) / 2.0),
-                child: PercentageIndicator(
-                  showPercentage: false,
-                  fontSize: 16.0 * _scale,
-                  textColor: Colors.white,
-                  inactiveColor: Colors.white,
-                  radius: _scale * indicatorRadius,
-                  lineWidth: _scale * indicatorLineWidth,
-                  totalPeople: peoplePresent,
-                  totalSeats: chairsPresent,
-                ),
-              ),
+                  left: screenCoords.dx - (50.0 / 2.0) * _scale,
+                  top: screenCoords.dy - (50.0 / 2.0) * _scale,
+                  child: Container(
+                    width: 50.0*_scale,
+                    height: 50.0*_scale,
+                    child: Center(
+                      child: Text(
+                        "$percentageFull%",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: 24.0 * _scale),
+                      ),
+                    ),
+                  )
+
+                  // PercentageIndicator(
+                  //   showPercentage: false,
+                  //   fontSize: 16.0 * _scale,
+                  //   textColor: Colors.white,
+                  //   inactiveColor: Colors.white,
+                  //   radius: _scale * indicatorRadius,
+                  //   lineWidth: _scale * indicatorLineWidth,
+                  //   totalPeople: peoplePresent,
+                  //   totalSeats: chairsPresent,
+                  // ),
+                  ),
             ]);
           }
         });
