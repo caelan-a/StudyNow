@@ -42,7 +42,9 @@ class _MapScreenState extends State<MapScreen> {
         setState(() {
           print("Show map");
           _markableMapController = MarkableMapController(
-              initialMapScale: 1.0,
+              initialMapScale: 0.4,
+              minMapScale: 0.4,
+              maxMapScale: 0.5,
               cameraZoneFSPaths:
                   _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
 

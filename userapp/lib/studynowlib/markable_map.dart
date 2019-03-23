@@ -32,6 +32,8 @@ class MarkableMapController {
   State<MarkableMap> state;
 
   double initialMapScale;
+  double minMapScale;
+  double maxMapScale;
 
   List<String> cameraZoneFSPaths;
 
@@ -42,6 +44,8 @@ class MarkableMapController {
       this.currentWidgetBuilder,
       this.maxMarkerCount,
       this.initialMapScale = 1.0,
+      this.minMapScale = 0.2,
+      this.maxMapScale = 1.5,
       this.cameraZoneFSPaths}) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
@@ -342,8 +346,8 @@ class _MarkableMapState extends State<MarkableMap> {
       controller: _photoViewController,
       backgroundDecoration: BoxDecoration(color: Colors.white),
       imageProvider: FileImage(widget.imageFile),
-      minScale: PhotoViewComputedScale.covered * 0.8,
-      maxScale: 8.0,
+      minScale: widget.controller.minMapScale,
+      maxScale: widget.controller.maxMapScale,
       initialScale: widget.controller.initialMapScale,
     );
 
