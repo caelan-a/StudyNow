@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class Capture {
   String localPath;
@@ -96,7 +97,7 @@ class _StreamImageScreenState extends State<StreamImageScreen>
 
   Future<void> captureImageSeries() async {
     _capturing = true;
-    Directory tempDir = Directory.systemTemp;
+    Directory tempDir = await getTemporaryDirectory();
 
     _captures = [];
     for (var i = 0; i < Main.cameraZone.numCapturesPerInterval; i++) {
@@ -217,21 +218,25 @@ class _StreamImageScreenState extends State<StreamImageScreen>
             )),
           ),
           Center(
-              child: CircularPercentIndicator(
-            circularStrokeCap: CircularStrokeCap.round,
-            center: _timeElapsed != 0
-                ? Text(
-                    "$_timeElapsed",
-                    style: TextStyle(color: Theme.of(context).primaryColor),
-                  )
-                : Container(),
-            animationDuration: 100,
-            radius: 100.0,
-            lineWidth: 6.0,
-            animateFromLastPercent: true,
-            progressColor: Theme.of(context).primaryColor,
-            percent: (_timeElapsed / Main.cameraZone.timeInterval).toDouble(),
-          ))
+              child: !_capturing
+                  ? CircularPercentIndicator(
+                      circularStrokeCap: CircularStrokeCap.round,
+                      center: _timeElapsed != 0
+                          ? Text(
+                              "$_timeElapsed",
+                              style: TextStyle(
+                                  color: Theme.of(context).primaryColor),
+                            )
+                          : Container(),
+                      animationDuration: 100,
+                      radius: 100.0,
+                      lineWidth: 6.0,
+                      animateFromLastPercent: true,
+                      progressColor: Theme.of(context).primaryColor,
+                      percent: (_timeElapsed / Main.cameraZone.timeInterval)
+                          .toDouble(),
+                    )
+                  : LinearProgressIndicator())
         ],
       ),
     );
