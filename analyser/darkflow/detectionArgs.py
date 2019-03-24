@@ -1,0 +1,1 @@
+theArgs = ['flow', '--imgdir', 'test\\yeet', '--model', 'cfg\\yolo.cfg', '--load', 'bin\\yolov2.weights', '--threshold', '0.1']

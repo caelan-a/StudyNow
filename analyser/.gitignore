@@ -1,0 +1,53 @@
+
+# Python bytecode
+*.pyc
+
+#testing python files
+new.py
+
+# Sample image data
+sample_img/
+
+# Annotated test results
+results/
+
+demo.gif
+
+# Intermediate training data
+backup/
+tfnet/yolo/parse-history.txt
+tfnet/yolo/*.parsed
+*.txt
+!requirements*.txt
+*.pb
+/profile
+/test.py
+
+# Built cython files
+darkflow/cython_utils/*.pyd
+darkflow/cython_utils/*.c
+
+#egg-info
+darkflow.egg-info/
+
+#Other build stuff
+build/
+
+#TensorBoard logs
+summary/
+
+#Built graphs
+built_graph/
+
+#Training checkpoints
+ckpt/*
+
+#pytest cache
+.cache/
+
+#bin folder (weights too big)
+bin/
+
+#test files
+test/
+
