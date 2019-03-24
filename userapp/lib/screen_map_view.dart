@@ -1,253 +1,179 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
 
-class MapScreen extends StatefulWidget {
-  final String library;
-  final String libraryTitle;
+import 'studynowlib/database.dart';
+import 'studynowlib/markable_map.dart';
+import 'studynowlib/library_info.dart';
+import 'studynowlib/widget_percentage_indicator.dart';
 
-  MapScreen({@required this.library, this.libraryTitle = "Library"});
+class MapScreen extends StatefulWidget {
+  final String libraryCollectionPath;
+  final String libraryTitle;
+  final String initialFloorID;
+  final String initialFSFloorPath;
+
+  MapScreen(
+      {@required this.libraryCollectionPath,
+      this.libraryTitle = "Library",
+      this.initialFloorID,
+      this.initialFSFloorPath});
 
   @override
   _MapScreenState createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
-  String _currentFloor;
-
-  File _imageFile;
-  String _imageLocalPath;
-  int imageWidth;
-  int imageHeight;
-  bool _imageLoaded = false;
-
-  PhotoViewController _photoViewController;
-
-  List<Offset> zoneMarkers = [];
+  bool _showMap = false;
+  LibraryInfo _libraryInfo;
+  String _currentFloorID;
+  String _fsCurrentFloorPath;
+  MarkableMapController _markableMapController;
 
   void showFloor(String floorID) {
-    _currentFloor = floorID;
-
-    setState(() {
-      _imageLoaded = false;
-    });
-
-    _imageLocalPath =
-        "/assets/floorplans/" + widget.library + "_" + _currentFloor + ".png";
-    _imageLoaded = true;
-
-    //  Firebase path of floor plan image
-    // String firebaseImagePath = "/libraries/" +
-    //     widget.library +
-    //     "/floors/" +
-    //     floorID +
-    //     "/floor_plan.png";
-
-    // downloadFile(firebaseImagePath);
-  }
-
-  //  Download file from firebase and store locally
-  Future<File> downloadFile(String firebasePath) async {
-    String fileName = firebasePath.split('/').last;
-
-    print("Downloading image: $fileName from FirebaseStorage..");
-    Directory tempDir = Directory.systemTemp;
-    final File file = File('${tempDir.path}/$fileName');
-
-    print(fileName);
-
-    final StorageReference ref =
-        FirebaseStorage.instance.ref().child(firebasePath);
-    final StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-
-    downloadTask.future.then((snapshot) async {
-      //  Get width and height data from image
-      List<int> imageBytes = await file.readAsBytes();
-      imageutil.Image image = imageutil.decodePng(imageBytes);
-      imageWidth = image.width;
-      imageHeight = image.height;
-      // print("w: $imageWidth, h: $imageHeight");
-
+    _showMap = false;
+    _currentFloorID = floorID;
+    _fsCurrentFloorPath = _libraryInfo.floors[_currentFloorID].fsPath;
+    _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
       setState(() {
-        _imageFile = file;
-        _imageLoaded = true;
+        print("Show map");
+        _markableMapController = MarkableMapController(
+            initialMapScale: 0.4,
+            minMapScale: 0.4,
+            maxMapScale: 0.5,
+            cameraZoneFSPaths:
+                _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
+
+        _showMap = true;
       });
     });
-
-    return file;
   }
 
   @override
   void initState() {
-    _photoViewController = PhotoViewController();
-
-    //  Set state of this widget to update icons when user scales or translates image
-    _photoViewController.outputStateStream.listen((onData) {
-      setState(() {
-        print("Set state");
-      });
+    _fsCurrentFloorPath = widget.initialFSFloorPath;
+    _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
+    _libraryInfo.init(widget.libraryCollectionPath).then((success) {
+      showFloor(widget.initialFloorID);
     });
-
-    showFloor("1");
 
     super.initState();
   }
 
-  //  Uses values from PhotoViewController to translate coordinates of screen touch to an offset in image space
-  //  This offset describes the percentage of the way from the center to the right side of the image in the x
-  //  and a percentage of the way from the center to the bottom side of the image in the y
-  Offset convertToImageCoords(Offset touchPoint, PhotoViewController controller,
-      int imageWidth, int imageHeight) {
-    Size screenSize =
-        MediaQuery.of(context).size; // pixel size of device screen
-    Offset imageOffsetFromCenter = controller.position; // Offset from center
-    double scale = controller.scale; // scale image has been dilated by
+  Widget _buildStreamPercentageIndicator(String fsFloorPath) {
+    return StreamBuilder(
+        stream: Firestore.instance.document(fsFloorPath).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return PercentageIndicator(
+              totalPeople: 0,
+              totalSeats: 10000,
+            );
+          } else {
+            var data = snapshot.data;
+            int peoplePresent = data['people_present'];
+            int chairsPresent = data['chairs_present'];
 
-    Offset screenCenterPoint =
-        Offset(screenSize.width / 2, screenSize.height / 2);
-
-    Offset touchOffsetFromCenter = touchPoint - screenCenterPoint;
-    Offset touchOffsetFromCenterOfImage =
-        touchOffsetFromCenter - imageOffsetFromCenter;
-
-    double xPercentageFromCenter =
-        touchOffsetFromCenterOfImage.dx / scale / (imageWidth / 2.0);
-    double yPercentageFromCenter =
-        touchOffsetFromCenterOfImage.dy / scale / (imageHeight / 2.0);
-
-    print("\nxPerc: $xPercentageFromCenter\nyPerc: $yPercentageFromCenter");
-
-    return Offset(xPercentageFromCenter, yPercentageFromCenter);
+            return PercentageIndicator(
+              totalPeople: peoplePresent,
+              totalSeats: chairsPresent,
+            );
+          }
+        });
   }
 
-  //  Uses values from PhotoViewController to translate coordinates of image space to screen coords
-  //  Inverse function of convertToImageCoords
-  Offset convertToScreenCoords(Offset centerOffset,
-      PhotoViewController controller, int imageWidth, int imageHeight) {
-    Size screenSize =
-        MediaQuery.of(context).size; // pixel size of device screen
-    Offset screenCenterPoint =
-        Offset(screenSize.width / 2, screenSize.height / 2);
-    Offset imageOffsetFromCenter = controller.position; // Offset from center
-
-    double x = screenCenterPoint.dx +
-        centerOffset.dx * (controller.scale * imageWidth / 2.0);
-    x += (imageOffsetFromCenter.dx);
-
-    double y = screenCenterPoint.dy +
-        (controller.scale * (centerOffset.dy * (imageHeight / 2.0)));
-    y += (controller.scale * imageOffsetFromCenter.dy);
-
-    print("\nx: $x\ny: $y\nscale: ${controller.scale}");
-    print("imageOffset: $imageOffsetFromCenter");
-    Offset screenCoords = Offset(x, y);
-    return screenCoords;
-  }
-
-  //  centerOffset is percentage of the way to each end from center of image
-  Widget _buildMarker(Offset centerOffset) {
-    Offset screenCoords = convertToScreenCoords(
-        centerOffset, _photoViewController, imageWidth, imageHeight);
-
-    // print("\nImageCoords: $centerOffset\nScreenCoords: $screenCoords");
-    return Positioned(
-      left: screenCoords.dx,
-      top: screenCoords.dy,
-      child: Icon(Icons.crop_square),
-    );
-  }
-
-  void refresh() {
+  void _select(String floorID) {
     setState(() {
-      zoneMarkers = [];
+      showFloor(floorID);
+      print("Current floor: $_currentFloorID");
     });
+  }
+
+  Widget _buildFloorsMenu() {
+    return PopupMenuButton<String>(
+      offset: Offset(0.0, -MediaQuery.of(context).size.height / 5.0),
+      icon: Icon(Icons.clear_all),
+      initialValue: _currentFloorID,
+      onCanceled: () => print("Tapped off menu"),
+      onSelected: _select,
+      itemBuilder: (BuildContext context) {
+        return _libraryInfo.floors.values.map((floor) {
+          return PopupMenuItem<String>(
+            enabled: true,
+            value: floor.floorID,
+            child: Text(floor.title),
+          );
+        }).toList();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    //  Populate stack to allow overlaying of location icons
-    List<Widget> stackChildren = [];
-    if (_imageLoaded) {
-      stackChildren.add(new Container(
-          child: new PhotoView(
-        controller: _photoViewController,
-        backgroundDecoration: BoxDecoration(color: Colors.white),
-        imageProvider: AssetImage("baileuu_1.png"),
-        minScale: PhotoViewComputedScale.contained * 0.8,
-        maxScale: 4.0,
-      )));
-
-      stackChildren
-          .addAll(zoneMarkers.map((Offset o) => _buildMarker(o)).toList());
-    }
-
     return Scaffold(
-        // floatingActionButton: FloatingActionButton.extended(
-        //   elevation: 10.0,
-        //   icon: const Icon(Icons.check),
-        //   label: const Text(
-        //     'Done',
-        //     style: TextStyle(fontSize: 16.0),
-        //   ),
-        //   onPressed: () {},
-        // ),
-        // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          notchMargin: 4.0,
-          child: new Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-              Container(
-                padding: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
-                child: Text(
-                  "",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 20.0),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.clear_all),
-                onPressed: () {
-                },
-              )
-            ],
-          ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).canvasColor,
+        shape: CircleBorder(),
+        elevation: 5.0,
+        label: _buildStreamPercentageIndicator(_fsCurrentFloorPath),
+        onPressed: () {},
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        notchMargin: 4.0,
+        child: new Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            Text(_showMap ? widget.libraryTitle : "",
+                style: TextStyle(
+                  fontSize: 14.0,
+                )),
+            Padding(
+              padding: EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 0.0),
+            ),
+            Text(_showMap ? _libraryInfo.floors[_currentFloorID].title : "",
+                style: TextStyle(
+                  fontSize: 14.0,
+                )),
+            _showMap
+                ? _buildFloorsMenu()
+                : IconButton(
+                    icon: Icon(Icons.clear_all),
+                    onPressed: () {
+                      // Navigator.pop(context);
+                    },
+                  ),
+          ],
         ),
-        body: !_imageLoaded
-            ? Center(
-                child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Fetching image from camera\n\n",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16.0),
-                  ),
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).primaryColor),
-                  ),
-                ],
-              ))
-            : GestureDetector(
-                onTapUp: (detail) {},
-                child: Stack(children: stackChildren),
-              ));
+      ),
+      body: Center(
+        child: _showMap
+            ? MarkableMap(
+                controller: _markableMapController,
+                imageFile: _libraryInfo.floors[_currentFloorID].floorPlanImage,
+                imageSize:
+                    _libraryInfo.floors[_currentFloorID].floorPlanImageSize,
+                editable: false,
+                screenSize: MediaQuery.of(context).size,
+              )
+            : CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).primaryColor),
+              ),
+      ),
+    );
   }
 }

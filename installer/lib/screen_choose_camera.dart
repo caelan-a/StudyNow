@@ -61,6 +61,7 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
     return WillPopScope(
         onWillPop: () async {
           if (await navKey.currentState.maybePop()) {
+            
             print("NEST BACK");
             setState(() {
               _collectionToDisplayPath =
@@ -151,14 +152,14 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
                               "/" +
                               document.documentID +
                               "/" +
-                              document['next_collection'];
+                              document['nextCollection'];
                           _collectionToDisplayPath = nextCollectionPath;
-                          print("Next Collection: $nextCollectionPath");
+
                           //  Push a new collection
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => _buildFirebaseList(
                                   nextCollectionPath, _scaffoldKey)));
-                          _currentCollectionName = document['next_collection'];
+                          _currentCollectionName = document['nextCollection'];
                         } else {
                           //  No more collections to search
                           Navigator.of(context, rootNavigator: true).push(

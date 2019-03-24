@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 
+import 'widget_percentage_indicator.dart';
+import 'pulsating_marker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /*
   Using photo_view creates a mapo that user can place markers on which move around 
 */
@@ -28,15 +32,21 @@ class MarkableMapController {
   State<MarkableMap> state;
 
   double initialMapScale;
+  double minMapScale;
+  double maxMapScale;
 
-  MarkableMapController({
-    this.initialMarkerScale = 0.25,
-    this.deleteRadius = 20,
-    this.maxMarkerSize = 100.0,
-    this.currentWidgetBuilder,
-    this.maxMarkerCount,
-    this.initialMapScale = 1.0,
-  }) {
+  List<String> cameraZoneFSPaths;
+
+  MarkableMapController(
+      {this.initialMarkerScale = 0.25,
+      this.deleteRadius = 20,
+      this.maxMarkerSize = 100.0,
+      this.currentWidgetBuilder,
+      this.maxMarkerCount,
+      this.initialMapScale = 1.0,
+      this.minMapScale = 0.2,
+      this.maxMapScale = 1.5,
+      this.cameraZoneFSPaths}) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
             left: position.dx,
@@ -185,6 +195,75 @@ class _MarkableMapState extends State<MarkableMap> {
     return marker.widgetBuilder(size, screenCoords);
   }
 
+  Widget _buildStreamMarker(String fsCameraZonePath) {
+    return StreamBuilder(
+        stream: Firestore.instance.document(fsCameraZonePath).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Container();
+          } else {
+            var data = snapshot.data;
+            double markerX = data['marker_position_on_image_x'].toDouble();
+            double markerY = data['marker_position_on_image_y'].toDouble();
+            double markerScale = data['marker_scale'].toDouble();
+            int chairsPresent = data['chairs_present'];
+            int peoplePresent = data['people_present'];
+            int percentageFull = 100 * peoplePresent ~/ chairsPresent;
+
+            print("$fsCameraZonePath");
+            Color color = PercentageIndicator.getColor(percentageFull);
+
+            Offset screenCoords =
+                convertToScreenCoords(Offset(markerX, markerY));
+            print(screenCoords);
+            double size =
+                _scale * widget.controller.maxMarkerSize * markerScale;
+            print(size);
+
+            // Text percentageTextWidget = Text("$percentageFull%", style: TextStyle(color: Colors.white),),
+
+            return Stack(children: <Widget>[
+              Positioned(
+                left: screenCoords.dx,
+                top: screenCoords.dy,
+                child: PulsatingMarker(
+                  color: color,
+                  maxOpacity: 0.25,
+                  screenPosition: Offset(0, 0),
+                  radius: size,
+                ),
+              ),
+              Positioned(
+                  left: screenCoords.dx - (50.0 / 2.0) * _scale,
+                  top: screenCoords.dy - (50.0 / 2.0) * _scale,
+                  child: Container(
+                    width: 50.0*_scale,
+                    height: 50.0*_scale,
+                    child: Center(
+                      child: Text(
+                        "$percentageFull%",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,fontSize: 24.0 * _scale),
+                      ),
+                    ),
+                  )
+
+                  // PercentageIndicator(
+                  //   showPercentage: false,
+                  //   fontSize: 16.0 * _scale,
+                  //   textColor: Colors.white,
+                  //   inactiveColor: Colors.white,
+                  //   radius: _scale * indicatorRadius,
+                  //   lineWidth: _scale * indicatorLineWidth,
+                  //   totalPeople: peoplePresent,
+                  //   totalSeats: chairsPresent,
+                  // ),
+                  ),
+            ]);
+          }
+        });
+  }
+
   void _onSliderValueChanged(double value) {
     setState(() {
       widget.controller.currentMarkerScale = value;
@@ -267,8 +346,8 @@ class _MarkableMapState extends State<MarkableMap> {
       controller: _photoViewController,
       backgroundDecoration: BoxDecoration(color: Colors.white),
       imageProvider: FileImage(widget.imageFile),
-      minScale: PhotoViewComputedScale.covered * 0.8,
-      maxScale: 8.0,
+      minScale: widget.controller.minMapScale,
+      maxScale: widget.controller.maxMapScale,
       initialScale: widget.controller.initialMapScale,
     );
 
@@ -281,6 +360,15 @@ class _MarkableMapState extends State<MarkableMap> {
 
     if (widget.editable && widget.sizeableMarkers) {
       children.add(_buildMarkerSizeSlider());
+    }
+
+    //  Add any widgets from stream
+    if (widget.controller.cameraZoneFSPaths != null) {
+      List<Widget> streamMarkerWidgets = widget.controller.cameraZoneFSPaths
+          .map(
+              (String cameraZoneFSPath) => _buildStreamMarker(cameraZoneFSPath))
+          .toList();
+      children.addAll(streamMarkerWidgets);
     }
 
     return widget.editable

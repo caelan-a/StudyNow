@@ -6,7 +6,8 @@ import 'package:installer/screen_choose_zone.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
-import 'markable_map.dart';
+import 'package:studynowlib/markable_map.dart';
+
 
 const double DIST_TO_DELETE =
     20.0; // pixel distance from touch when a marker should be deleted

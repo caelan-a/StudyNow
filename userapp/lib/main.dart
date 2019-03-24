@@ -8,6 +8,12 @@ class Main extends StatelessWidget {
   static final GlobalKey<NavigatorState> _rootNavKey =
       GlobalKey<NavigatorState>();
 
+  // FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+  // FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+  //     .setTimestampsInSnapshotsEnabled(true)
+  //     .build();
+  // firestore.setFirestoreSettings(settings);
+
   static GlobalKey<NavigatorState> getRootNavKey() {
     return _rootNavKey;
   }
@@ -23,6 +29,7 @@ class Main extends StatelessWidget {
       title: 'Flutter Demo',
       navigatorKey: _rootNavKey,
       theme: ThemeData(
+        // fontFamily: 'Pridi',
         primarySwatch: Colors.blue,
         pageTransitionsTheme: PageTransitionsTheme(builders: {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
