@@ -12,7 +12,7 @@ import 'studynowlib/database.dart';
 import 'studynowlib/markable_map.dart';
 import 'studynowlib/library_info.dart';
 import 'studynowlib/widget_percentage_indicator.dart';
-
+import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 
 class MapScreen extends StatefulWidget {

@@ -54,17 +54,26 @@ class Floor {
     }
   }
 
+  Future<Size> getImageSize(File file) async {
+    //  Get image properties when file is retrived
+    print("Getting image size");
+    List<int> imageBytes = await file.readAsBytes();
+    imageutil.Image image = imageutil.decodePng(imageBytes);
+    print("Successfully read image size");
+    return Size(image.width.toDouble(), image.height.toDouble());
+  }
+
   Future<FloorPlan> getFloorPlan() async {
     if (floorPlan == null) {
       String fbsFloorplanPath = fsPath + '/floor_plan.png';
       FloorPlan newFloorPlan = FloorPlan(fbsPath: fbsFloorplanPath);
 
       await Database.downloadFile(fbsFloorplanPath, (File file) async {
-        //  Get image properties when file is retrived
-        List<int> imageBytes = await file.readAsBytes();
-        imageutil.Image image = imageutil.decodePng(imageBytes);
-        newFloorPlan.imageSize =
-            Size(image.width.toDouble(), image.height.toDouble());
+        
+        
+        newFloorPlan.imageSize = await getImageSize(file);
+
+
         newFloorPlan.imageFile = file;
         newFloorPlan.imageLoaded = true;
       }, true);
