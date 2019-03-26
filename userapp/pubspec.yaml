@@ -43,10 +43,7 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
   assets:
-  - assets/studynow.png
-  - assets/floorplans/
-  - assets/floorplans//baileuu_1.png
-  - assets/floorplans/baileuu_1.png
+    - assets/
   # not required no more
   # - assets/floorplans//baileuu_2.png
   # - assets/floorplans/baileuu_2.png

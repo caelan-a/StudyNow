@@ -7,12 +7,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:photo_view/photo_view.dart';
 import 'package:image/image.dart' as imageutil;
-
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'studynowlib/database.dart';
 import 'studynowlib/markable_map.dart';
 import 'studynowlib/library_info.dart';
 import 'studynowlib/widget_percentage_indicator.dart';
 
+import 'package:flutter/foundation.dart';
 class MapScreen extends StatefulWidget {
   final String libraryCollectionPath;
   final String libraryTitle;
@@ -36,11 +37,11 @@ class _MapScreenState extends State<MapScreen> {
   String _fsCurrentFloorPath;
   MarkableMapController _markableMapController;
 
-  void showFloor(String floorID) {
+  void showFloor(String floorID) async {
     _showMap = false;
     _currentFloorID = floorID;
     _fsCurrentFloorPath = _libraryInfo.floors[_currentFloorID].fsPath;
-    _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
+    _libraryInfo.floors[_currentFloorID].floorPlan = await _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
       setState(() {
         print("Show map");
         _markableMapController = MarkableMapController(
@@ -51,18 +52,21 @@ class _MapScreenState extends State<MapScreen> {
                 _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
 
         _showMap = true;
+        print("SHOW MAP NOW");
       });
     });
+  }
+
+  void initLibrary() async {
+    _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
+    _libraryInfo.floors = await LibraryInfo.getFloors(widget.libraryCollectionPath);
+    showFloor(widget.initialFloorID);
   }
 
   @override
   void initState() {
     _fsCurrentFloorPath = widget.initialFSFloorPath;
-    _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
-    _libraryInfo.init(widget.libraryCollectionPath).then((success) {
-      showFloor(widget.initialFloorID);
-    });
-
+    initLibrary();
     super.initState();
   }
 
@@ -71,18 +75,19 @@ class _MapScreenState extends State<MapScreen> {
         stream: Firestore.instance.document(fsFloorPath).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return PercentageIndicator(
-              totalPeople: 0,
-              totalSeats: 10000,
+            return LinearPercentIndicator(
+              width: 200.0,
+              percent: 0.0,
             );
           } else {
             var data = snapshot.data;
             int peoplePresent = data['people_present'];
             int chairsPresent = data['chairs_present'];
-
-            return PercentageIndicator(
-              totalPeople: peoplePresent,
-              totalSeats: chairsPresent,
+            int percentageFull = 100 * peoplePresent ~/ chairsPresent;
+            return LinearPercentIndicator(
+              width: 200.0,
+              progressColor: PercentageIndicator.getColor(percentageFull),
+              percent: percentageFull / 100.0,
             );
           }
         });
@@ -117,14 +122,6 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Theme.of(context).canvasColor,
-        shape: CircleBorder(),
-        elevation: 5.0,
-        label: _buildStreamPercentageIndicator(_fsCurrentFloorPath),
-        onPressed: () {},
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         notchMargin: 4.0,
         child: new Row(
@@ -137,17 +134,41 @@ class _MapScreenState extends State<MapScreen> {
                 Navigator.pop(context);
               },
             ),
-            Text(_showMap ? widget.libraryTitle : "",
-                style: TextStyle(
-                  fontSize: 14.0,
-                )),
-            Padding(
-              padding: EdgeInsets.fromLTRB(40.0, 0.0, 40.0, 0.0),
+            Container(
+              padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
+              height: 50.0,
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(_showMap ? widget.libraryTitle : "",
+                          style: TextStyle(
+                              fontSize: 14.0, fontWeight: FontWeight.bold)),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(30.0, 0.0, 0.0, 0.0),
+                      ),
+                      Text(
+                          _showMap
+                              ? _libraryInfo.floors[_currentFloorID].title
+                              : "",
+                          style: TextStyle(
+                            fontSize: 14.0,
+                          ))
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(3.0),
+                  ),
+                  _showMap
+                      ? _buildStreamPercentageIndicator(
+                          _libraryInfo.floors[_currentFloorID].fsPath)
+                      : LinearPercentIndicator(
+                          width: 200.0,
+                          percent: 0.0,
+                        ),
+                ],
+              ),
             ),
-            Text(_showMap ? _libraryInfo.floors[_currentFloorID].title : "",
-                style: TextStyle(
-                  fontSize: 14.0,
-                )),
             _showMap
                 ? _buildFloorsMenu()
                 : IconButton(
@@ -163,9 +184,9 @@ class _MapScreenState extends State<MapScreen> {
         child: _showMap
             ? MarkableMap(
                 controller: _markableMapController,
-                imageFile: _libraryInfo.floors[_currentFloorID].floorPlanImage,
+                imageFile: _libraryInfo.floors[_currentFloorID].floorPlan.imageFile,
                 imageSize:
-                    _libraryInfo.floors[_currentFloorID].floorPlanImageSize,
+                    _libraryInfo.floors[_currentFloorID].floorPlan.imageSize,
                 editable: false,
                 screenSize: MediaQuery.of(context).size,
               )

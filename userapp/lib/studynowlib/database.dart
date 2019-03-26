@@ -5,10 +5,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 
 class Database {
   //  Download file from firebase and store locally or retrieve local if already present
-  static Future<void> downloadFile(
+  static Future<dynamic> downloadFile(
       String fbsPath, Function(File) onComplete, bool checkLocal) async {
     Directory tempDir = await getTemporaryDirectory();
     List<String> fbsPath_split = fbsPath.split('/');

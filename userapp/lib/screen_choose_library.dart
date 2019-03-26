@@ -6,6 +6,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'studynowlib/widget_percentage_indicator.dart';
 import 'screen_map_view.dart';
 import 'main.dart';
+import 'dart:io';
 
 class ChooseLibraryScreen extends StatefulWidget {
   ChooseLibraryScreen({Key key}) : super(key: key);
@@ -15,6 +16,8 @@ class ChooseLibraryScreen extends StatefulWidget {
 }
 
 class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
+  Color titleColor;
+
   //  Filled upon user selections
   String _chosenLibrary = "";
 
@@ -23,6 +26,8 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
 
   @override
   void initState() {
+    titleColor = Colors.grey[700];
+
     _collectionToDisplayPath = "/libraries";
 
     super.initState();
@@ -37,11 +42,11 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
             backgroundColor: Theme.of(context).canvasColor,
             title: const Text(
               'Libraries',
-              style: TextStyle(color: Colors.grey, fontSize: 24.0),
+              style: TextStyle(color: Color(0xFF717171), fontSize: 20.0),
             ),
             centerTitle: true,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios),
+              icon: Icon(Icons.home),
               color: Colors.grey,
               onPressed: () => Navigator.pop(context),
             ),
@@ -57,48 +62,68 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
 
   Widget _buildLibraryTile(String libraryTitle, String libraryID,
       int totalSeats, int totalPeople, int tileIndex) {
+    int percentageFull = 100 * totalPeople ~/ totalSeats;
+
     return Container(
       padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0.0),
-      child: Card(
-        // margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 10.0),
-        elevation: 4.0,
-        child: ListTile(
-          contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
-          leading: PercentageIndicator(
-            totalSeats: totalSeats,
-            totalPeople: totalPeople,
-            offsetFactor: tileIndex,
+      child: ListTile(
+        contentPadding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(3.0),
+          child: Image.asset(
+            "assets/library.jpeg",
+            fit: BoxFit.cover,
+            height: 60.0,
+            width: 100.0,
           ),
-          title: Text(
-            libraryTitle,
-            style: TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 36.0,
-                color: Colors.grey[600]),
-          ),
-          subtitle: Text("$totalSeats seats",
-              style: TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 16.0,
-                  color: Colors.grey[600])),
-          trailing: Icon(Icons.arrow_forward_ios),
-          onTap: () {
-            //  Store selection info
-            _chosenLibrary = libraryID;
-
-            Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute(
-                builder: (context) => MapScreen(
-                      libraryCollectionPath: '/libraries/' + _chosenLibrary,
-                      libraryTitle: libraryTitle,
-                      initialFloorID: "1",
-                      initialFSFloorPath:
-                          '/libraries/' + _chosenLibrary + '/floors/' + "1",
-                    ),
-              ),
-            );
-          },
         ),
+        title: Text(
+          libraryTitle,
+          style: TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 24.0,
+              color: Colors.grey[600]),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text("$totalSeats seats",
+                style: TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 14.0,
+                    
+                    color: Colors.grey[600])),
+            LinearPercentIndicator(
+              padding: EdgeInsets.all(5.0),
+              animation: true,
+              animateFromLastPercent: true,
+              width: 150.0,
+              progressColor: PercentageIndicator.getColor(percentageFull),
+              percent: percentageFull / 100.0,
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: Colors.grey[400],
+          size: 20.0,
+        ),
+        onTap: () {
+          //  Store selection info
+          _chosenLibrary = libraryID;
+
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (context) => MapScreen(
+                    libraryCollectionPath: '/libraries/' + _chosenLibrary,
+                    libraryTitle: libraryTitle,
+                    initialFloorID: "1",
+                    initialFSFloorPath:
+                        '/libraries/' + _chosenLibrary + '/floors/' + "1",
+                  ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -140,11 +165,11 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                         _buildLibraryTile(
                             document['title'], document.documentID, 100, 14, 0),
                         _buildLibraryTile(
-                            "Giblin", document.documentID,100, 20, 1),
+                            "Giblin", document.documentID, 100, 20, 1),
                         _buildLibraryTile(
                             "Brownless", document.documentID, 100, 23, 2),
                         _buildLibraryTile(
-                            "Arts", document.documentID,100, 34, 3),
+                            "Arts", document.documentID, 100, 34, 3),
                         _buildLibraryTile(
                             "ERC", document.documentID, 100, 49, 4),
                         _buildLibraryTile(
