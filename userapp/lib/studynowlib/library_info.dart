@@ -68,7 +68,7 @@ class Floor {
         newFloorPlan.imageFile = file;
         newFloorPlan.imageLoaded = true;
       }, true);
-
+      print("FILE LOADED: ${newFloorPlan.imageLoaded}");
       return newFloorPlan;
     } else {
       return floorPlan;

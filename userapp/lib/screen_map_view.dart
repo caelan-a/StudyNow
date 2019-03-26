@@ -14,6 +14,7 @@ import 'studynowlib/library_info.dart';
 import 'studynowlib/widget_percentage_indicator.dart';
 
 import 'package:flutter/foundation.dart';
+
 class MapScreen extends StatefulWidget {
   final String libraryCollectionPath;
   final String libraryTitle;
@@ -41,25 +42,28 @@ class _MapScreenState extends State<MapScreen> {
     _showMap = false;
     _currentFloorID = floorID;
     _fsCurrentFloorPath = _libraryInfo.floors[_currentFloorID].fsPath;
-    _libraryInfo.floors[_currentFloorID].floorPlan = await _libraryInfo.floors[_currentFloorID].getFloorPlan().then((void result) {
-      setState(() {
-        print("Show map");
-        _markableMapController = MarkableMapController(
-            initialMapScale: 0.4,
-            minMapScale: 0.4,
-            maxMapScale: 0.5,
-            cameraZoneFSPaths:
-                _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
+    _libraryInfo.floors[_currentFloorID].floorPlan =
+        await _libraryInfo.floors[_currentFloorID].getFloorPlan();
+    print("IMAGE LOADED:" +
+        _libraryInfo.floors[_currentFloorID].floorPlan.imageLoaded.toString());
+    setState(() {
+      print("Show map");
+      _markableMapController = MarkableMapController(
+          initialMapScale: 0.45,
+          minMapScale: 0.45,
+          maxMapScale: 0.5,
+          cameraZoneFSPaths:
+              _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
 
-        _showMap = true;
-        print("SHOW MAP NOW");
-      });
+      _showMap = true;
+      print("SHOW MAP NOW");
     });
   }
 
   void initLibrary() async {
     _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
-    _libraryInfo.floors = await LibraryInfo.getFloors(widget.libraryCollectionPath);
+    _libraryInfo.floors =
+        await LibraryInfo.getFloors(widget.libraryCollectionPath);
     showFloor(widget.initialFloorID);
   }
 
@@ -184,7 +188,8 @@ class _MapScreenState extends State<MapScreen> {
         child: _showMap
             ? MarkableMap(
                 controller: _markableMapController,
-                imageFile: _libraryInfo.floors[_currentFloorID].floorPlan.imageFile,
+                imageFile:
+                    _libraryInfo.floors[_currentFloorID].floorPlan.imageFile,
                 imageSize:
                     _libraryInfo.floors[_currentFloorID].floorPlan.imageSize,
                 editable: false,
