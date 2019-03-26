@@ -2,4 +2,6 @@
 
 Collection of apps to power the StudyNow experiences which allows people to find free seats in there places of study.
 
-![alt text](front_screen.jpg)
+<p align="center">
+  <img src="front_screen.jpg" width="350" title="hover text">
+</p>
