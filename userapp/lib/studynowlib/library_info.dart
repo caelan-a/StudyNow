@@ -32,7 +32,7 @@ class FloorPlan {
   File imageFile;
   Size imageSize;
 
-  FloorPlan({this.fbsPath});
+  FloorPlan({this.fbsPath, this.imageSize});
 }
 
 class Floor {
@@ -69,16 +69,18 @@ class Floor {
       FloorPlan newFloorPlan = FloorPlan(fbsPath: fbsFloorplanPath);
 
       await Database.downloadFile(fbsFloorplanPath, (File file) async {
-        
-        
         newFloorPlan.imageSize = await getImageSize(file);
-
 
         newFloorPlan.imageFile = file;
         newFloorPlan.imageLoaded = true;
       }, true);
-      print("FILE LOADED: ${newFloorPlan.imageLoaded}");
       return newFloorPlan;
+    } else if (floorPlan.imageLoaded == false) {
+      await Database.downloadFile(floorPlan.fbsPath, (File file) async {
+        floorPlan.imageFile = file;
+        floorPlan.imageLoaded = true;
+      }, true);
+      return floorPlan;
     } else {
       return floorPlan;
     }
@@ -105,7 +107,7 @@ class Floor {
     });
   }
 
-  Floor(this.fsPath, this.title) {
+  Floor(this.fsPath, this.title, this.floorPlan) {
     this.fsPath = fsPath;
     print(fsPath);
   }
@@ -116,7 +118,7 @@ class LibraryInfo {
   Map<String, Floor> floors;
 
   static Future<Map<String, Floor>> getFloors(String fsLibraryPath) async {
-    print("Initialising floors..");
+    print("Getting floor information from firebase for $fsLibraryPath");
     Map<String, Floor> floors;
     floors = await Firestore.instance
         .collection(fsLibraryPath + '/floors')
@@ -126,17 +128,32 @@ class LibraryInfo {
       floors = {};
 
       int numFLoors = snapshot.documents.length;
-      print("$numFLoors floors in " + fsLibraryPath + '/floors');
+      print("$numFLoors floor(s)");
 
       for (DocumentSnapshot floorDoc in snapshot.documents) {
         String floorID = floorDoc.documentID.toString();
         String floorTitle = floorDoc['title'].toString();
-        print(floorID + " : " + floorTitle);
+
+        print("Getting info for floor [$floorID] $floorTitle");
+
+        // double floorPlanImageWidth = floorDoc['floor_plan_image_width'].toDouble();
+        // double floorPlanImageHeight = floorDoc['floor_plan_image_height'].toDouble();
+
+        double floorPlanImageWidth = 725.0;
+        double floorPlanImageHeight = 2000.0;
+
+
         String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
-        Floor floor = Floor(fsFloorPath, floorTitle);
+        Floor floor = Floor(
+          fsFloorPath,
+          floorTitle,
+          FloorPlan(fbsPath: fsFloorPath + '/floor_plan.png', imageSize: Size(floorPlanImageWidth,floorPlanImageHeight))
+        );
         await floor.init();
         floors.putIfAbsent(floorID, () => floor);
       }
+
+      print("Floor information successfully retrieved");
       return floors;
     });
     return floors;

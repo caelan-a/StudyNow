@@ -8,6 +8,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
 class Database {
+  static getFSAttributes(String fsPath) {
+
+  }
+  
   //  Download file from firebase and store locally or retrieve local if already present
   static Future<dynamic> downloadFile(
       String fbsPath, Function(File) onComplete, bool checkLocal) async {
