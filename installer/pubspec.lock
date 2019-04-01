@@ -215,7 +215,7 @@ packages:
   studynowlib:
     dependency: "direct main"
     description:
-      path: "../studynowlib"
+      path: "..\\studynowlib"
       relative: true
     source: path
     version: "0.0.1"

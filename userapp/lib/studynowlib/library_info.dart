@@ -139,16 +139,27 @@ class LibraryInfo {
         // double floorPlanImageWidth = floorDoc['floor_plan_image_width'].toDouble();
         // double floorPlanImageHeight = floorDoc['floor_plan_image_height'].toDouble();
 
-        double floorPlanImageWidth = 725.0;
-        double floorPlanImageHeight = 2000.0;
+        int floorPlanImageHeight = 2000;
+        int floorPlanImageWidth = 968;
 
+        if (floorDoc['floor_plan_image_width'] != null &&
+            floorDoc['floor_plan_image_height'] != null) {
+          floorPlanImageWidth =
+              int.parse(floorDoc['floor_plan_image_width'].toString());
+          floorPlanImageHeight =
+              int.parse(floorDoc['floor_plan_image_height'].toString());
+        }
+
+        print(floorPlanImageWidth);
 
         String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
         Floor floor = Floor(
-          fsFloorPath,
-          floorTitle,
-          FloorPlan(fbsPath: fsFloorPath + '/floor_plan.png', imageSize: Size(floorPlanImageWidth,floorPlanImageHeight))
-        );
+            fsFloorPath,
+            floorTitle,
+            FloorPlan(
+                fbsPath: fsFloorPath + '/floor_plan.png',
+                imageSize: Size(floorPlanImageWidth.toDouble(),
+                    floorPlanImageHeight.toDouble())));
         await floor.init();
         floors.putIfAbsent(floorID, () => floor);
       }
