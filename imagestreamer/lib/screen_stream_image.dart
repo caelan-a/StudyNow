@@ -10,18 +10,28 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:battery/battery.dart';
+import 'package:intl/intl.dart';
 
 class Capture {
   String localPath;
   String name;
+  bool streaming;
 
-  Capture({this.localPath, this.name});
+  Capture({
+    this.localPath,
+    this.name,
+  });
 }
 
 class StreamImageScreen extends StatefulWidget {
+  String cameraZoneFsID;
+  bool streaming;
+
   int timeInterval;
 
-  StreamImageScreen({Key key, this.timeInterval}) : super(key: key);
+  StreamImageScreen(
+      {Key key, this.timeInterval, this.cameraZoneFsID, this.streaming})
+      : super(key: key);
 
   @override
   _StreamImageScreenState createState() => _StreamImageScreenState();
@@ -29,19 +39,21 @@ class StreamImageScreen extends StatefulWidget {
 
 class _StreamImageScreenState extends State<StreamImageScreen>
     with SingleTickerProviderStateMixin {
-  bool _timerPaused = true;
-  bool _readyToStream = false;
-  bool _capturing = false;
   List<CameraDescription> cameras;
   CameraController controller;
 
   static const oneSec = const Duration(seconds: 1);
   int _timeElapsed = 0;
   int _numCapturesPerInterval = 1;
+  bool _timerPaused = true;
+  bool _capturing = false;
 
+  bool isStreaming;
   List<Capture> _captures;
 
   Timer timer;
+
+  StreamSubscription firebaseDocSubscription;
 
   Future<CameraController> getCameraController() async {
     cameras = await availableCameras();
@@ -62,16 +74,46 @@ class _StreamImageScreenState extends State<StreamImageScreen>
   }
 
   var battery = Battery();
-  
+
+  void listenToFireStore() {
+    firebaseDocSubscription = Firestore.instance
+        .collection('camera_zones')
+        .document(widget.cameraZoneFsID)
+        .snapshots()
+        .listen((DocumentSnapshot snapshot) {
+      bool streaming = snapshot.data['streaming'];
+      print("CHANGE: $streaming");
+      // Hub has commanded camera to stop streaming
+      if (streaming == true && _timerPaused == true) {
+        _resumeTimer();
+        widget.streaming = true;
+      } else if (streaming == false && _timerPaused == false) {
+        widget.streaming = false;
+        _pauseTimer();
+      }
+    });
+  }
+
   @override
   void initState() {
+    //  Start streamer if firebase says to stream
+    if (widget.streaming) {
+      _resumeTimer();
+    }
+
+    listenToFireStore();
+
     // Instantiate it
     // Be informed when the state (full, charging, discharging) changes
     battery.onBatteryStateChanged.listen((BatteryState state) {
-          Firestore.instance.document(fsCameraZonePath).setData({
-      ""
-          "capture_urls": {captureName: fbsCaptureUrl},
-    }, merge: true);
+      print("Change battery for ${widget.cameraZoneFsID}");
+      battery.batteryLevel.then((level) {
+        Firestore.instance
+            .document('camera_zones/' + widget.cameraZoneFsID)
+            .setData({
+          "battery_percentage": level,
+        }, merge: true);
+      });
     });
 
     getCameraController().then((c) {
@@ -83,8 +125,8 @@ class _StreamImageScreenState extends State<StreamImageScreen>
   Future<void> setCaptureUrl(
       String captureName, String fbsCaptureUrl, String fsCameraZonePath) async {
     Firestore.instance.document(fsCameraZonePath).setData({
-      ""
-          "capture_urls": {captureName: fbsCaptureUrl},
+      "capture_urls": {captureName: fbsCaptureUrl},
+      "last_streamed_at": DateTime.now().toString()
     }, merge: true);
   }
 
@@ -100,7 +142,7 @@ class _StreamImageScreenState extends State<StreamImageScreen>
       await task.onComplete.then((result) async {
         //  Set url for download in firestore
         await setCaptureUrl(capture.name, await result.ref.getDownloadURL(),
-            Main.cameraZone.getFirebasePath());
+            'camera_zones/' + widget.cameraZoneFsID);
         print("Uploaded ${capture.name} successfully");
       });
     }
@@ -131,7 +173,9 @@ class _StreamImageScreenState extends State<StreamImageScreen>
     timer.cancel();
     captureImageSeries().then((void v) {
       sendImagesToFirebase().then((v) {
-        startTimeout();
+        if (widget.streaming) {
+          startTimeout();
+        }
         print("Captures successfully uploaded\nRestarting timer");
       });
     });

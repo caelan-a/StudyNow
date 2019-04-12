@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'screen_settings.dart';
 import 'screen_stream_image.dart';
+import 'package:imagestreamer/screen_choose_camera.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
@@ -51,7 +52,7 @@ class _HomePageState extends State<HomePage> {
                 child: Text("Start"),
                 color: Theme.of(context).primaryColor,
                 onPressed: () {
-                  Main.toScreen(context, StreamImageScreen(timeInterval: 20,));
+                  Main.toScreen(context, ChooseCameraScreen());
                 },
               ),
             ),
