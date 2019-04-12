@@ -152,14 +152,14 @@ class _ChooseCameraScreenState extends State<ChooseCameraScreen> {
                               "/" +
                               document.documentID +
                               "/" +
-                              document['nextCollection'];
+                              document['next_collection'];
                           _collectionToDisplayPath = nextCollectionPath;
 
                           //  Push a new collection
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => _buildFirebaseList(
                                   nextCollectionPath, _scaffoldKey)));
-                          _currentCollectionName = document['nextCollection'];
+                          _currentCollectionName = document['next_collection'];
                         } else {
                           //  No more collections to search
                           Navigator.of(context, rootNavigator: true).push(

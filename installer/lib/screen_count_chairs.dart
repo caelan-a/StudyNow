@@ -6,7 +6,7 @@ import 'package:installer/screen_choose_zone.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
-import 'package:studynowlib/markable_map.dart';
+import 'studynowlib/markable_map.dart';
 
 
 const double DIST_TO_DELETE =
@@ -57,11 +57,10 @@ class _CountChairsScreenState extends State<CountChairsScreen> {
 
     downloadTask.future.then((snapshot) async {
       //  Get width and height data from image
-      List<int> imageBytes = await file.readAsBytes();
-      imageutil.Image image = imageutil.decodeJpg(imageBytes);
-      print("width: ${image.width}");
-      _imageSize = Size(image.width.toDouble(), image.height.toDouble());
-
+      // List<int> imageBytes = await file.readAsBytes();
+      // imageutil.Image image = imageutil.decodePng(imageBytes);
+      _imageSize = Size(500.0, 1000.0);
+      print("SIZE: " + _imageSize.toString());
       setState(() {
         _imageFile = file;
         _imageLoaded = true;

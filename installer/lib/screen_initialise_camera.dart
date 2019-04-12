@@ -66,14 +66,13 @@ class _InitialiseCameraScreenState extends State<InitialiseCameraScreen> {
     _cameraName = "Camera " + widget.cameraZone;
     _firebaseZonePath = "/libraries/" +
         widget.library +
-        "/floors" +
-        "/" +
+        "/floors/" +
         widget.floor +
         "/camera_zones" +
         "/" +
         widget.cameraZone;
     _firebaseImagePath = _firebaseZonePath + "/" +
-        "image.jpg" +
+        "image_0.png" +
         "";
 
     _firebaseFloorplanPath = "/libraries/" +

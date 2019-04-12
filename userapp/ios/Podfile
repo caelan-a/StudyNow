@@ -51,6 +51,8 @@ target 'Runner' do
     end
   }
 
+  pod 'Firebase/Core'
+
   # Plugin Pods
   plugin_pods = parse_KV_file('../.flutter-plugins')
   plugin_pods.map { |p|
@@ -67,3 +69,4 @@ post_install do |installer|
     end
   end
 end
+

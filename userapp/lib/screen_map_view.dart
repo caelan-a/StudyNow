@@ -12,20 +12,19 @@ import 'studynowlib/database.dart';
 import 'studynowlib/markable_map.dart';
 import 'studynowlib/library_info.dart';
 import 'studynowlib/widget_percentage_indicator.dart';
-
+import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 
 class MapScreen extends StatefulWidget {
-  final String libraryCollectionPath;
+  final String libraryID;
   final String libraryTitle;
-  final String initialFloorID;
-  final String initialFSFloorPath;
+  final String initialFloorID;  
 
   MapScreen(
-      {@required this.libraryCollectionPath,
+      {@required this.libraryID,
       this.libraryTitle = "Library",
       this.initialFloorID,
-      this.initialFSFloorPath});
+      });
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -35,13 +34,11 @@ class _MapScreenState extends State<MapScreen> {
   bool _showMap = false;
   LibraryInfo _libraryInfo;
   String _currentFloorID;
-  String _fsCurrentFloorPath;
   MarkableMapController _markableMapController;
 
   void showFloor(String floorID) async {
     _showMap = false;
     _currentFloorID = floorID;
-    _fsCurrentFloorPath = _libraryInfo.floors[_currentFloorID].fsPath;
     _libraryInfo.floors[_currentFloorID].floorPlan =
         await _libraryInfo.floors[_currentFloorID].getFloorPlan();
     print("IMAGE LOADED:" +
@@ -52,8 +49,8 @@ class _MapScreenState extends State<MapScreen> {
           initialMapScale: 0.45,
           minMapScale: 0.45,
           maxMapScale: 0.5,
-          cameraZoneFSPaths:
-              _libraryInfo.floors[_currentFloorID].getCameraZoneFSPaths());
+          cameraZoneFsIDs:
+              _libraryInfo.floors[_currentFloorID].getCameraZoneFsIDs());
 
       _showMap = true;
       print("SHOW MAP NOW");
@@ -61,15 +58,14 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void initLibrary() async {
-    _libraryInfo = LibraryInfo(fsPath: widget.libraryCollectionPath);
+    _libraryInfo = LibraryInfo(libraryID: widget.libraryID);
     _libraryInfo.floors =
-        await LibraryInfo.getFloors(widget.libraryCollectionPath);
+        await LibraryInfo.getFloors(widget.libraryID);
     showFloor(widget.initialFloorID);
   }
 
   @override
   void initState() {
-    _fsCurrentFloorPath = widget.initialFSFloorPath;
     initLibrary();
     super.initState();
   }
@@ -165,7 +161,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   _showMap
                       ? _buildStreamPercentageIndicator(
-                          _libraryInfo.floors[_currentFloorID].fsPath)
+                          "floors/" + _libraryInfo.floors[_currentFloorID].floorFsID)
                       : LinearPercentIndicator(
                           width: 200.0,
                           percent: 0.0,

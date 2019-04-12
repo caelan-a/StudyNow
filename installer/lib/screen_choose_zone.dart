@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
-import 'package:studynowlib/markable_map.dart';
-import 'package:studynowlib/pulsating_marker.dart';
+import 'studynowlib/markable_map.dart';
+import 'studynowlib/pulsating_marker.dart';
 
 // import 'bouncing_icon.dart';
 

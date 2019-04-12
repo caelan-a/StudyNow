@@ -14,7 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:isolate';
 
 class CameraZone {
-  String cameraZoneFsID;
+  String fsPath;
   String title;
 
   int chairs_present;
@@ -23,21 +23,20 @@ class CameraZone {
   Offset markerPosition;
   double markerScale;
 
-  CameraZone({this.cameraZoneFsID, this.title});
+  CameraZone({this.fsPath, this.title});
 }
 
 class FloorPlan {
   bool imageLoaded = false;
-  String downloadUrl; // FirebaseStorage floorplan path
+  String fbsPath; // FirebaseStorage floorplan path
   File imageFile;
   Size imageSize;
 
-  FloorPlan({this.downloadUrl, this.imageSize});
+  FloorPlan({this.fbsPath, this.imageSize});
 }
 
 class Floor {
-  String libraryID;
-  String floorFsID;
+  String fsPath;
   String floorID; // firebase collection name of floor
   String title; // User friendly string
 
@@ -45,22 +44,42 @@ class Floor {
 
   Map<String, CameraZone> cameraZones;
 
-  List<String> getCameraZoneFsIDs() {
+  List<String> getCameraZoneFSPaths() {
     if (cameraZones != null) {
       return cameraZones.values
-          .map((CameraZone cameraZone) => cameraZone.cameraZoneFsID)
+          .map((CameraZone cameraZone) => cameraZone.fsPath)
           .toList();
     } else {
       return [];
     }
   }
 
+  Future<Size> getImageSize(File file) async {
+    //  Get image properties when file is retrived
+    print("Getting image size");
+    List<int> imageBytes = await file.readAsBytes();
+    imageutil.Image image = imageutil.decodePng(imageBytes);
+    print("Successfully read image size");
+    return Size(image.width.toDouble(), image.height.toDouble());
+  }
+
   Future<FloorPlan> getFloorPlan() async {
-    if (!floorPlan.imageLoaded) {
-      await Database.downloadFile(floorPlan.downloadUrl, (File file) async {
+    if (floorPlan == null) {
+      String fbsFloorplanPath = fsPath + '/floor_plan.png';
+      FloorPlan newFloorPlan = FloorPlan(fbsPath: fbsFloorplanPath);
+
+      await Database.downloadFile(fbsFloorplanPath, (File file) async {
+        newFloorPlan.imageSize = await getImageSize(file);
+
+        newFloorPlan.imageFile = file;
+        newFloorPlan.imageLoaded = true;
+      }, true);
+      return newFloorPlan;
+    } else if (floorPlan.imageLoaded == false) {
+      await Database.downloadFile(floorPlan.fbsPath, (File file) async {
         floorPlan.imageFile = file;
         floorPlan.imageLoaded = true;
-      }, floorFsID + ".png", true);
+      }, true);
       return floorPlan;
     } else {
       return floorPlan;
@@ -69,40 +88,40 @@ class Floor {
 
   Future<bool> init() {
     return Firestore.instance
-        .collection('camera_zones')
-        .where('library', isEqualTo: libraryID)
-        .where('floor', isEqualTo: floorID)
+        .collection(fsPath + '/camera_zones')
         .snapshots()
         .first
         .then((snapshot) async {
       cameraZones = {};
 
       int numCameraZones = snapshot.documents.length;
-      print("$numCameraZones camera zones in " + libraryID + '/' + floorID);
+      print("$numCameraZones camera zones in " + fsPath + '/camera_zones');
 
       for (DocumentSnapshot cameraZoneDoc in snapshot.documents) {
-        String cameraZoneFsID = cameraZoneDoc.documentID;
+        String cameraZoneID = cameraZoneDoc.documentID;
         String cameraZoneTitle = cameraZoneDoc['title'];
-        String cameraZoneId = cameraZoneDoc['id'];
-        cameraZones.putIfAbsent(cameraZoneId,
-            () => CameraZone(cameraZoneFsID: cameraZoneFsID, title: cameraZoneTitle));
+        String fsCameraZonePath = fsPath + '/camera_zones/' + cameraZoneID;
+        cameraZones.putIfAbsent(cameraZoneID,
+            () => CameraZone(fsPath: fsCameraZonePath, title: cameraZoneTitle));
       }
     });
   }
 
-  Floor({this.libraryID, this.floorID, this.title, this.floorPlan, this.floorFsID,});
+  Floor(this.fsPath, this.title, this.floorPlan) {
+    this.fsPath = fsPath;
+    print(fsPath);
+  }
 }
 
 class LibraryInfo {
-  String libraryID;
+  String fsPath;
   Map<String, Floor> floors;
 
-  static Future<Map<String, Floor>> getFloors(String libraryID) async {
-    print("Getting floor information from firebase for $libraryID");
+  static Future<Map<String, Floor>> getFloors(String fsLibraryPath) async {
+    print("Getting floor information from firebase for $fsLibraryPath");
     Map<String, Floor> floors;
     floors = await Firestore.instance
-        .collection('floors')
-        .where('library', isEqualTo: libraryID)
+        .collection(fsLibraryPath + '/floors')
         .snapshots()
         .first
         .then((snapshot) async {
@@ -112,12 +131,13 @@ class LibraryInfo {
       print("$numFLoors floor(s)");
 
       for (DocumentSnapshot floorDoc in snapshot.documents) {
-        String floorFsID = floorDoc.documentID.toString();
-        String floorID = floorDoc['id'].toString();
+        String floorID = floorDoc.documentID.toString();
         String floorTitle = floorDoc['title'].toString();
-        String floorPlanUrl = floorDoc['floor_plan_image_url'].toString();
 
-        print("Getting info for floor [$floorFsID] $floorTitle");
+        print("Getting info for floor [$floorID] $floorTitle");
+
+        // double floorPlanImageWidth = floorDoc['floor_plan_image_width'].toDouble();
+        // double floorPlanImageHeight = floorDoc['floor_plan_image_height'].toDouble();
 
         int floorPlanImageHeight = 2000;
         int floorPlanImageWidth = 968;
@@ -132,16 +152,14 @@ class LibraryInfo {
 
         print(floorPlanImageWidth);
 
+        String fsFloorPath = fsLibraryPath + '/floors/' + floorID;
         Floor floor = Floor(
-          libraryID: libraryID,
-          floorID: floorID,
-          title: floorTitle,
-          floorFsID: floorFsID,
-            floorPlan: FloorPlan(
-                downloadUrl: floorPlanUrl,
+            fsFloorPath,
+            floorTitle,
+            FloorPlan(
+                fbsPath: fsFloorPath + '/floor_plan.png',
                 imageSize: Size(floorPlanImageWidth.toDouble(),
-                    floorPlanImageHeight.toDouble())),
-            );
+                    floorPlanImageHeight.toDouble())));
         await floor.init();
         floors.putIfAbsent(floorID, () => floor);
       }
@@ -152,5 +170,5 @@ class LibraryInfo {
     return floors;
   }
 
-  LibraryInfo({this.libraryID});
+  LibraryInfo({this.fsPath});
 }

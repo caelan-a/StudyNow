@@ -91,7 +91,6 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                 style: TextStyle(
                     fontWeight: FontWeight.normal,
                     fontSize: 14.0,
-                    
                     color: Colors.grey[600])),
             LinearPercentIndicator(
               padding: EdgeInsets.all(5.0),
@@ -115,11 +114,9 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
           Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
               builder: (context) => MapScreen(
-                    libraryCollectionPath: '/libraries/' + _chosenLibrary,
+                    libraryID: _chosenLibrary,
                     libraryTitle: libraryTitle,
                     initialFloorID: "1",
-                    initialFSFloorPath:
-                        '/libraries/' + _chosenLibrary + '/floors/' + "1",
                   ),
             ),
           );
@@ -163,19 +160,11 @@ class _ChooseLibraryScreenState extends State<ChooseLibraryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         _buildLibraryTile(
-                            document['title'], document.documentID, 100, 14, 0),
-                        _buildLibraryTile(
-                            "Giblin", document.documentID, 100, 20, 1),
-                        _buildLibraryTile(
-                            "Brownless", document.documentID, 100, 23, 2),
-                        _buildLibraryTile(
-                            "Arts", document.documentID, 100, 34, 3),
-                        _buildLibraryTile(
-                            "ERC", document.documentID, 100, 49, 4),
-                        _buildLibraryTile(
-                            "Johnson", document.documentID, 100, 68, 5),
-                        _buildLibraryTile(
-                            "Euwin", document.documentID, 100, 89, 6),
+                            document['title'],
+                            document.documentID,
+                            document['chairs_present'],
+                            document['people_present'],
+                            0),
                       ],
                     );
                   }).toList(),
