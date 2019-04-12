@@ -35,7 +35,7 @@ class MarkableMapController {
   double minMapScale;
   double maxMapScale;
 
-  List<String> cameraZoneFsIDs;
+  List<String> cameraZoneFSPaths;
 
   MarkableMapController(
       {this.initialMarkerScale = 0.25,
@@ -46,7 +46,7 @@ class MarkableMapController {
       this.initialMapScale = 1.0,
       this.minMapScale = 0.2,
       this.maxMapScale = 1.5,
-      this.cameraZoneFsIDs}) {
+      this.cameraZoneFSPaths}) {
     if (currentWidgetBuilder == null) {
       currentWidgetBuilder = (double size, Offset position) => Positioned(
             left: position.dx,
@@ -363,10 +363,10 @@ class _MarkableMapState extends State<MarkableMap> {
     }
 
     //  Add any widgets from stream
-    if (widget.controller.cameraZoneFsIDs != null) {
-      List<Widget> streamMarkerWidgets = widget.controller.cameraZoneFsIDs
+    if (widget.controller.cameraZoneFSPaths != null) {
+      List<Widget> streamMarkerWidgets = widget.controller.cameraZoneFSPaths
           .map(
-              (String cameraZoneFsID) => _buildStreamMarker("camera_zones/" + cameraZoneFsID))
+              (String cameraZoneFSPath) => _buildStreamMarker(cameraZoneFSPath))
           .toList();
       children.addAll(streamMarkerWidgets);
     }

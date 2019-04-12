@@ -9,6 +9,7 @@ import 'package:camera/camera.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:battery/battery.dart';
 
 class Capture {
   String localPath;
@@ -60,8 +61,19 @@ class _StreamImageScreenState extends State<StreamImageScreen>
     super.dispose();
   }
 
+  var battery = Battery();
+  
   @override
   void initState() {
+    // Instantiate it
+    // Be informed when the state (full, charging, discharging) changes
+    battery.onBatteryStateChanged.listen((BatteryState state) {
+          Firestore.instance.document(fsCameraZonePath).setData({
+      ""
+          "capture_urls": {captureName: fbsCaptureUrl},
+    }, merge: true);
+    });
+
     getCameraController().then((c) {
       controller = c;
     });
@@ -71,7 +83,8 @@ class _StreamImageScreenState extends State<StreamImageScreen>
   Future<void> setCaptureUrl(
       String captureName, String fbsCaptureUrl, String fsCameraZonePath) async {
     Firestore.instance.document(fsCameraZonePath).setData({
-      "capture_urls": {captureName: fbsCaptureUrl},
+      ""
+          "capture_urls": {captureName: fbsCaptureUrl},
     }, merge: true);
   }
 

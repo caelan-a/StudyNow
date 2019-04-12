@@ -6,7 +6,7 @@ import 'package:installer/screen_choose_zone.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:image/image.dart' as imageutil;
-import 'package:studynowlib/markable_map.dart';
+import 'studynowlib/markable_map.dart';
 
 
 const double DIST_TO_DELETE =

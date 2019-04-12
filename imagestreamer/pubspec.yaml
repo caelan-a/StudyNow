@@ -23,9 +23,8 @@ dependencies:
   cloud_firestore: ^0.9.5+2
   camera:
   path_provider:
-
-  studynowlib:
-    path: '../studynowlib'
+  percent_indicator: ^1.0.14
+  battery:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
