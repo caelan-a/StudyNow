@@ -15,5 +15,5 @@ The StudyNow app has 3 components:
 
 
 <p align="center">
-  <img src="studynow.png" width="600" title="hover text">
+  <img src="studynow.png" width="900" title="hover text">
 </p>
