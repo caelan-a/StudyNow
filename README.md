@@ -17,4 +17,4 @@ The StudyNow app has 3 components:
 <p align="center">
   <img src="studynow.png" width="900" title="hover text">
 </p>
-![Alt Text](ezgif.com-video-to-gif.gif)
+![Gif Demo](https://raw.githubusercontent.com/caelan-a/StudyNow/master/ezgif.com-video-to-gif.gif)
