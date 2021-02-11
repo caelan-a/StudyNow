@@ -2,6 +2,10 @@
 
 Collection of software packages to power the StudyNow experience, which allows people to find free seats at university.
 
+<p align="center">
+  <img src="studynow.png" width="900" title="hover text">
+</p>
+
 This project was originally started by myself and 2 others.
 
 It's main goals are to allow users to find which seats are free in study spaces around the Univeristy of Melbourne. Originally to a precision of the seats themselves, due to technical and security reasons, this was revised to a precision of how busy a table/zone was.
@@ -14,7 +18,4 @@ The StudyNow app has 3 components:
 
 
 
-<p align="center">
-  <img src="studynow.png" width="900" title="hover text">
-</p>
 ![Gif Demo](https://raw.githubusercontent.com/caelan-a/StudyNow/master/ezgif.com-video-to-gif.gif)
