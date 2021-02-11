@@ -17,5 +17,5 @@ The StudyNow app has 3 components:
 4. An installation app that allows administrators to install the cameras and keep track of them.
 
 
-
+Administrator App Example
 ![Gif Demo](https://raw.githubusercontent.com/caelan-a/StudyNow/master/ezgif.com-video-to-gif.gif)
