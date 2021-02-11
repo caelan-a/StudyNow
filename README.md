@@ -18,4 +18,5 @@ The StudyNow app has 3 components:
 
 
 Administrator App Example
+
 ![Gif Demo](https://raw.githubusercontent.com/caelan-a/StudyNow/master/ezgif.com-video-to-gif.gif)
